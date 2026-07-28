@@ -1,0 +1,6 @@
+{
+  "name": "AI Quiz Multiverse",
+  "description": "Generate interactive arcade mini-game quizzes from notes or documents using Google Gemini AI",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
