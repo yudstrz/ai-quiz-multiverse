@@ -1,5 +1,7 @@
 export type GameMode = "normal" | "runner" | "flappy" | "dash" | "shooter";
 
+export type DifficultyLevel = "easy" | "medium" | "hard";
+
 export type AvatarShape = "triangle" | "square" | "circle";
 
 export interface AvatarConfig {

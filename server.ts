@@ -138,7 +138,7 @@ app.get("/api/preset-quiz", (req, res) => {
 // Endpoint to generate quiz using Gemini 3.6 Flash
 app.post("/api/generate-quiz", async (req, res) => {
   try {
-    const { sourceText, questionCount = 5, language = "auto" } = req.body;
+    const { sourceText, questionCount = 5, difficulty = "medium", language = "auto" } = req.body;
 
     if (!sourceText || typeof sourceText !== "string" || sourceText.trim().length === 0) {
       return res.status(400).json({ error: "Source text is required to generate quiz." });
@@ -155,6 +155,19 @@ app.post("/api/generate-quiz", async (req, res) => {
 
     const numQuestions = Math.min(Math.max(parseInt(questionCount) || 5, 3), 15);
 
+    const difficultyLevel = ["easy", "medium", "hard"].includes(difficulty?.toString().toLowerCase())
+      ? difficulty.toString().toLowerCase()
+      : "medium";
+
+    let difficultyInstruction = "";
+    if (difficultyLevel === "easy") {
+      difficultyInstruction = "7. Difficulty Level: EASY. Focus on basic facts, straightforward questions, clear concepts, and simple vocabulary.";
+    } else if (difficultyLevel === "hard") {
+      difficultyInstruction = "7. Difficulty Level: HARD. Focus on complex analysis, fine distinctions between options, challenging application scenarios, and rigorous distractors.";
+    } else {
+      difficultyInstruction = "7. Difficulty Level: MEDIUM. Balanced mix of core concepts, practical comprehension, and standard knowledge testing.";
+    }
+
     const prompt = `You are an expert educational quiz author and game master.
 Create an engaging multiple-choice quiz based strictly on the provided study materials or notes.
 
@@ -165,6 +178,7 @@ Instructions:
 4. Ensure index 'answer' is an integer between 0 and 3 indicating the correct option.
 5. Provide a clear, friendly explanation (1-2 sentences) explaining why that answer is correct.
 6. Write the quiz in the same language as the study material provided (e.g., if input is in Indonesian, output Indonesian; if English, output English).
+${difficultyInstruction}
 
 Study Material:
 """

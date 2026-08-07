@@ -5,6 +5,7 @@ import {
   GameState,
   QuestionItem,
   HistoryItem,
+  DifficultyLevel,
 } from "./types";
 import { SetupScreen } from "./components/SetupScreen";
 import { GameUIOverlay } from "./components/GameUIOverlay";
@@ -32,6 +33,7 @@ export default function App() {
     face: "(•‿•)",
   });
   const [questionCount, setQuestionCount] = useState<number>(5);
+  const [difficulty, setDifficulty] = useState<DifficultyLevel>("medium");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastType, setToastType] = useState<"error" | "success" | "info">("error");
@@ -64,7 +66,8 @@ export default function App() {
   // Call Server API to generate AI quiz from text notes
   const handleGenerateAI = async (
     sourceText: string,
-    numQuestions: number
+    numQuestions: number,
+    diff: DifficultyLevel = difficulty
   ) => {
     setIsLoading(true);
     try {
@@ -74,6 +77,7 @@ export default function App() {
         body: JSON.stringify({
           sourceText,
           questionCount: numQuestions,
+          difficulty: diff,
         }),
       });
 
@@ -199,6 +203,8 @@ export default function App() {
           setAvatarConfig={setAvatarConfig}
           questionCount={questionCount}
           setQuestionCount={setQuestionCount}
+          difficulty={difficulty}
+          setDifficulty={setDifficulty}
           isLoading={isLoading}
           showToast={showToast}
         />

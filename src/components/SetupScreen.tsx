@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Upload,
   Sparkles,
@@ -8,13 +8,15 @@ import {
   Play,
   Bot,
   HelpCircle,
-  BookOpen
+  BookOpen,
+  Zap,
+  Download
 } from "lucide-react";
-import { AvatarConfig, GameMode } from "../types";
+import { AvatarConfig, GameMode, DifficultyLevel } from "../types";
 import { parseDocumentFile } from "../utils/documentParser";
 
 interface SetupScreenProps {
-  onGenerateAI: (sourceText: string, questionCount: number) => Promise<void>;
+  onGenerateAI: (sourceText: string, questionCount: number, difficulty: DifficultyLevel) => Promise<void>;
   onUsePreset: (category: string) => void;
   gameMode: GameMode;
   setGameMode: (mode: GameMode) => void;
@@ -22,6 +24,8 @@ interface SetupScreenProps {
   setAvatarConfig: React.Dispatch<React.SetStateAction<AvatarConfig>>;
   questionCount: number;
   setQuestionCount: (count: number) => void;
+  difficulty: DifficultyLevel;
+  setDifficulty: (difficulty: DifficultyLevel) => void;
   isLoading: boolean;
   showToast: (msg: string, type?: "error" | "success" | "info") => void;
 }
@@ -35,11 +39,35 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
   setAvatarConfig,
   questionCount,
   setQuestionCount,
+  difficulty,
+  setDifficulty,
   isLoading,
   showToast,
 }) => {
   const [sourceText, setSourceText] = useState("");
   const [isExtracting, setIsExtracting] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -69,14 +97,23 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
       showToast("Please paste notes or upload a document first!", "error");
       return;
     }
-    onGenerateAI(sourceText, questionCount);
+    onGenerateAI(sourceText, questionCount, difficulty);
   };
 
   return (
     <div className="w-full max-w-xl mx-auto min-h-screen p-4 md:p-6 flex flex-col justify-start bg-slate-950 text-white">
       {/* Header / Title Banner */}
-      <div className="text-center my-4">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold mb-2">
+      <div className="text-center my-4 relative">
+        {deferredPrompt && (
+          <button
+            onClick={handleInstallClick}
+            className="absolute -top-2 right-0 flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/20 hover:bg-blue-500/40 border border-blue-500/50 rounded-full text-blue-300 text-[10px] md:text-xs font-bold transition-colors"
+          >
+            <Download className="w-3.5 h-3.5" />
+            Install App
+          </button>
+        )}
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold mb-2 mt-4 md:mt-0">
           <Bot className="w-4 h-4 text-blue-400 animate-pulse" />
           <span>Powered by Google Gemini AI</span>
         </div>
@@ -239,21 +276,39 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
           </div>
         )}
 
-        {/* Question Count */}
-        <div className="flex items-center justify-between pt-1">
-          <label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-            <HelpCircle className="w-4 h-4 text-emerald-400" />
-            Questions Count
-          </label>
-          <select
-            value={questionCount}
-            onChange={(e) => setQuestionCount(Number(e.target.value))}
-            className="bg-slate-950 text-white text-xs p-2 rounded-lg border border-slate-800 focus:outline-none font-bold"
-          >
-            <option value={5}>5 Questions</option>
-            <option value={10}>10 Questions</option>
-            <option value={15}>15 Questions</option>
-          </select>
+        {/* Question Count & Difficulty Selection */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+          <div className="flex items-center justify-between bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
+            <label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+              <HelpCircle className="w-4 h-4 text-emerald-400" />
+              Questions
+            </label>
+            <select
+              value={questionCount}
+              onChange={(e) => setQuestionCount(Number(e.target.value))}
+              className="bg-slate-900 text-white text-xs p-2 rounded-lg border border-slate-700 focus:outline-none font-bold"
+            >
+              <option value={5}>5 Questions</option>
+              <option value={10}>10 Questions</option>
+              <option value={15}>15 Questions</option>
+            </select>
+          </div>
+
+          <div className="flex items-center justify-between bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
+            <label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+              <Zap className="w-4 h-4 text-amber-400" />
+              Difficulty
+            </label>
+            <select
+              value={difficulty}
+              onChange={(e) => setDifficulty(e.target.value as DifficultyLevel)}
+              className="bg-slate-900 text-white text-xs p-2 rounded-lg border border-slate-700 focus:outline-none font-bold capitalize"
+            >
+              <option value="easy">🌱 Easy</option>
+              <option value="medium">⚡ Medium</option>
+              <option value="hard">🔥 Hard</option>
+            </select>
+          </div>
         </div>
 
         {/* Loading Indicator */}
