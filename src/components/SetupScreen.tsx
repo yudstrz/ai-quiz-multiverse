@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { AvatarConfig, GameMode, DifficultyLevel } from "../types";
 import { parseDocumentFile } from "../utils/documentParser";
+import { PWAInstallButton } from "./PWAInstallButton";
 
 interface SetupScreenProps {
   onGenerateAI: (sourceText: string, questionCount: number, difficulty: DifficultyLevel) => Promise<void>;
@@ -46,28 +47,6 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
 }) => {
   const [sourceText, setSourceText] = useState("");
   const [isExtracting, setIsExtracting] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-
-  useEffect(() => {
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-
-    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-    return () => {
-      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-    };
-  }, []);
-
-  const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      setDeferredPrompt(null);
-    }
-  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -104,15 +83,7 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
     <div className="w-full max-w-xl mx-auto min-h-screen p-4 md:p-6 flex flex-col justify-start bg-slate-950 text-white">
       {/* Header / Title Banner */}
       <div className="text-center my-4 relative">
-        {deferredPrompt && (
-          <button
-            onClick={handleInstallClick}
-            className="absolute -top-2 right-0 flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/20 hover:bg-blue-500/40 border border-blue-500/50 rounded-full text-blue-300 text-[10px] md:text-xs font-bold transition-colors"
-          >
-            <Download className="w-3.5 h-3.5" />
-            Install App
-          </button>
-        )}
+        <PWAInstallButton showToast={showToast} />
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold mb-2 mt-4 md:mt-0">
           <Bot className="w-4 h-4 text-blue-400 animate-pulse" />
           <span>Powered by Google Gemini AI</span>
