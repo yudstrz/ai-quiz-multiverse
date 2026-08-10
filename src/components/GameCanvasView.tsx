@@ -155,7 +155,7 @@ export const GameCanvasView: React.FC<GameCanvasViewProps> = ({
       playerX = 80;
       playerY = canvas.height - 70 - 24;
       playerVY = 0;
-      gravity = 0.65;
+      gravity = 0.55;
     }
 
     // Helper: Draw Glassmorphic Block with Text
@@ -411,7 +411,7 @@ export const GameCanvasView: React.FC<GameCanvasViewProps> = ({
         }
       } else if (gameMode === "dash") {
         if ((e.key === " " || e.key === "ArrowUp") && !isJumping) {
-          playerVY = -12;
+          playerVY = -15.5;
           isJumping = true;
           spawnParticles(playerX, playerY + 20, "#e2e8f0", 8, 2);
           sounds.playJump();
@@ -440,7 +440,7 @@ export const GameCanvasView: React.FC<GameCanvasViewProps> = ({
         sounds.playJump();
       } else if (gameMode === "dash") {
         if (!isJumping) {
-          playerVY = -12;
+          playerVY = -15.5;
           isJumping = true;
           spawnParticles(playerX, playerY + 20, "#e2e8f0", 8, 2);
           sounds.playJump();
