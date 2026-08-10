@@ -6,6 +6,7 @@ import {
   QuestionItem,
   HistoryItem,
   DifficultyLevel,
+  Language,
 } from "./types";
 import { SetupScreen } from "./components/SetupScreen";
 import { GameUIOverlay } from "./components/GameUIOverlay";
@@ -30,12 +31,14 @@ export default function App() {
 
   const [gameMode, setGameMode] = useState<GameMode>("normal");
   const [avatarConfig, setAvatarConfig] = useState<AvatarConfig>({
-    shape: "triangle",
+    shape: "hexagon",
     color: "#3b82f6",
     face: "(•‿•)",
+    emojiChar: "👽",
   });
   const [questionCount, setQuestionCount] = useState<number>(5);
   const [difficulty, setDifficulty] = useState<DifficultyLevel>("medium");
+  const [language, setLanguage] = useState<Language>("English");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastType, setToastType] = useState<"error" | "success" | "info">("error");
@@ -69,7 +72,8 @@ export default function App() {
   const handleGenerateAI = async (
     sourceText: string,
     numQuestions: number,
-    diff: DifficultyLevel = difficulty
+    diff: DifficultyLevel = difficulty,
+    lang: Language = language
   ) => {
     setIsLoading(true);
     try {
@@ -80,6 +84,7 @@ export default function App() {
           sourceText,
           questionCount: numQuestions,
           difficulty: diff,
+          language: lang,
         }),
       });
 
@@ -206,6 +211,8 @@ export default function App() {
           setQuestionCount={setQuestionCount}
           difficulty={difficulty}
           setDifficulty={setDifficulty}
+          language={language}
+          setLanguage={setLanguage}
           isLoading={isLoading}
           showToast={showToast}
         />

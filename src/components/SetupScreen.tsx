@@ -10,14 +10,15 @@ import {
   HelpCircle,
   BookOpen,
   Zap,
-  Download
+  Download,
+  Globe
 } from "lucide-react";
-import { AvatarConfig, GameMode, DifficultyLevel } from "../types";
+import { AvatarConfig, GameMode, DifficultyLevel, Language } from "../types";
 import { parseDocumentFile } from "../utils/documentParser";
 import { PWAInstallButton } from "./PWAInstallButton";
 
 interface SetupScreenProps {
-  onGenerateAI: (sourceText: string, questionCount: number, difficulty: DifficultyLevel) => Promise<void>;
+  onGenerateAI: (sourceText: string, questionCount: number, difficulty: DifficultyLevel, language: Language) => Promise<void>;
   onUsePreset: (category: string) => void;
   gameMode: GameMode;
   setGameMode: (mode: GameMode) => void;
@@ -27,6 +28,8 @@ interface SetupScreenProps {
   setQuestionCount: (count: number) => void;
   difficulty: DifficultyLevel;
   setDifficulty: (difficulty: DifficultyLevel) => void;
+  language: Language;
+  setLanguage: (language: Language) => void;
   isLoading: boolean;
   showToast: (msg: string, type?: "error" | "success" | "info") => void;
 }
@@ -42,6 +45,8 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
   setQuestionCount,
   difficulty,
   setDifficulty,
+  language,
+  setLanguage,
   isLoading,
   showToast,
 }) => {
@@ -52,16 +57,26 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.size > 10 * 1024 * 1024) {
+      showToast("Ukuran file maksimal 10MB. Silakan gunakan file yang lebih kecil.", "error");
+      e.target.value = "";
+      return;
+    }
+
     setIsExtracting(true);
     showToast(`Extracting content from ${file.name}...`, "info");
 
     try {
       const extractedText = await parseDocumentFile(file);
       if (!extractedText.trim()) {
-        showToast("Could not extract readable text from file.", "error");
+        showToast("Tidak ada teks terbaca. Jika ini dokumen scan/gambar, sistem tidak dapat membacanya.", "error");
       } else {
         setSourceText(extractedText);
-        showToast("Document imported successfully!", "success");
+        if (extractedText.length > 100000) {
+          showToast("Teks sangat panjang! Hanya sebagian awal teks (sekitar 30 halaman) yang akan diproses AI.", "info");
+        } else {
+          showToast("Document imported successfully!", "success");
+        }
       }
     } catch (err: any) {
       showToast("Error reading document: " + err.message, "error");
@@ -76,7 +91,7 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
       showToast("Please paste notes or upload a document first!", "error");
       return;
     }
-    onGenerateAI(sourceText, questionCount, difficulty);
+    onGenerateAI(sourceText, questionCount, difficulty, language);
   };
 
   return (
@@ -199,56 +214,78 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
                   }
                   className="w-full bg-slate-900 text-white text-xs p-2 rounded-lg border border-slate-700 focus:outline-none"
                 >
-                  <option value="triangle">Triangle</option>
+                  <option value="hexagon">Hexagon</option>
                   <option value="square">Square</option>
                   <option value="circle">Circle</option>
+                  <option value="emoji">Emoji 👻</option>
                 </select>
               </div>
 
-              <div>
-                <span className="text-[10px] text-slate-400 block mb-1">Color</span>
-                <div className="relative h-8 rounded-lg overflow-hidden border border-slate-700 bg-slate-900">
+              {avatarConfig.shape === "emoji" ? (
+                <div className="col-span-2">
+                  <span className="text-[10px] text-slate-400 block mb-1">Type an Emoji</span>
                   <input
-                    type="color"
-                    value={avatarConfig.color}
+                    type="text"
+                    maxLength={2}
+                    value={avatarConfig.emojiChar || "👽"}
                     onChange={(e) =>
                       setAvatarConfig((prev) => ({
                         ...prev,
-                        color: e.target.value,
+                        emojiChar: e.target.value,
                       }))
                     }
-                    className="absolute -top-3 -left-3 w-20 h-20 cursor-pointer"
+                    className="w-full bg-slate-900 text-white text-lg p-1.5 rounded-lg border border-slate-700 focus:outline-none text-center"
+                    placeholder="👽"
                   />
                 </div>
-              </div>
+              ) : (
+                <>
+                  <div>
+                    <span className="text-[10px] text-slate-400 block mb-1">Color</span>
+                    <div className="relative h-8 rounded-lg overflow-hidden border border-slate-700 bg-slate-900">
+                      <input
+                        type="color"
+                        value={avatarConfig.color}
+                        onChange={(e) =>
+                          setAvatarConfig((prev) => ({
+                            ...prev,
+                            color: e.target.value,
+                          }))
+                        }
+                        className="w-full h-full cursor-pointer bg-transparent border-0 p-0 block [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-none"
+                      />
+                    </div>
+                  </div>
 
-              <div>
-                <span className="text-[10px] text-slate-400 block mb-1">Face Expression</span>
-                <select
-                  value={avatarConfig.face}
-                  onChange={(e) =>
-                    setAvatarConfig((prev) => ({
-                      ...prev,
-                      face: e.target.value,
-                    }))
-                  }
-                  className="w-full bg-slate-900 text-white text-xs p-2 rounded-lg border border-slate-700 focus:outline-none"
-                >
-                  <option value="">No Face</option>
-                  <option value="(•‿•)">(•‿•)</option>
-                  <option value="(>_<)">(&gt;_&lt;)</option>
-                  <option value="(⌐■_■)">(⌐■_■)</option>
-                  <option value="(T_T)">(T_T)</option>
-                  <option value="ʕ•ᴥ•ʔ">ʕ•ᴥ•ʔ</option>
-                  <option value="(O_O)">(O_O)</option>
-                </select>
-              </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 block mb-1">Face Expression</span>
+                    <select
+                      value={avatarConfig.face}
+                      onChange={(e) =>
+                        setAvatarConfig((prev) => ({
+                          ...prev,
+                          face: e.target.value,
+                        }))
+                      }
+                      className="w-full bg-slate-900 text-white text-xs p-2 rounded-lg border border-slate-700 focus:outline-none"
+                    >
+                      <option value="">No Face</option>
+                      <option value="(•‿•)">(•‿•)</option>
+                      <option value="(>_<)">{"(>_<)"}</option>
+                      <option value="(⌐■_■)">(⌐■_■)</option>
+                      <option value="(T_T)">(T_T)</option>
+                      <option value="ʕ•ᴥ•ʔ">ʕ•ᴥ•ʔ</option>
+                      <option value="(O_O)">(O_O)</option>
+                    </select>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}
 
-        {/* Question Count & Difficulty Selection */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+        {/* Question Count, Difficulty & Language Selection */}
+        <div className="flex flex-col gap-3 pt-1">
           <div className="flex items-center justify-between bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
             <label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
               <HelpCircle className="w-4 h-4 text-emerald-400" />
@@ -278,6 +315,24 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
               <option value="easy">🌱 Easy</option>
               <option value="medium">⚡ Medium</option>
               <option value="hard">🔥 Hard</option>
+            </select>
+          </div>
+
+          <div className="flex items-center justify-between bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
+            <label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+              <Globe className="w-4 h-4 text-blue-400" />
+              Language
+            </label>
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as Language)}
+              className="bg-slate-900 text-white text-xs p-2 rounded-lg border border-slate-700 focus:outline-none font-bold"
+            >
+              <option value="English">🇬🇧 English</option>
+              <option value="Indonesian">🇮🇩 Indonesian</option>
+              <option value="Spanish">🇪🇸 Spanish</option>
+              <option value="French">🇫🇷 French</option>
+              <option value="Japanese">🇯🇵 Japanese</option>
             </select>
           </div>
         </div>

@@ -1,13 +1,14 @@
 export type GameMode = "normal" | "runner" | "flappy" | "dash" | "shooter";
 
 export type DifficultyLevel = "easy" | "medium" | "hard";
-
-export type AvatarShape = "triangle" | "square" | "circle";
+export type Language = "English" | "Indonesian" | "Spanish" | "French" | "Japanese";
+export type AvatarShape = "hexagon" | "square" | "circle" | "emoji";
 
 export interface AvatarConfig {
   shape: AvatarShape;
   color: string;
   face: string;
+  emojiChar?: string;
 }
 
 export interface QuestionItem {

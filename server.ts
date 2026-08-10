@@ -80,16 +80,16 @@ Instructions:
 3. Option strings MUST be concise (1 to 4 words max) so they fit inside animated arcade game blocks.
 4. Ensure index 'answer' is an integer between 0 and 3 indicating the correct option.
 5. Provide a clear, friendly explanation (1-2 sentences) explaining why that answer is correct.
-6. Write the quiz in the same language as the study material provided (e.g., if input is in Indonesian, output Indonesian; if English, output English).
+6. Write the quiz strictly in ${language} language.
 ${difficultyInstruction}
 
 Study Material:
 """
-${sourceText.substring(0, 12000)}
+${sourceText.substring(0, 100000)}
 """`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.6-flash",
+      model: "gemini-flash",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
