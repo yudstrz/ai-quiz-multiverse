@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import "dotenv/config";
 import { GoogleGenAI, Type } from "@google/genai";
 import { createServer as createViteServer } from "vite";
 import { DEFAULT_PRESETS } from "./src/utils/presets";
