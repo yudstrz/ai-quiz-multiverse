@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ai-quiz-multiverse-v1';
+const CACHE_NAME = 'ai-quiz-multiverse-v2';
 
 const PRECACHE_ASSETS = [
   '/',

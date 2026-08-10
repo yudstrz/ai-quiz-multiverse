@@ -14,6 +14,8 @@ import { GameCanvasView } from "./components/GameCanvasView";
 import { ResultScreen } from "./components/ResultScreen";
 import { NotificationToast } from "./components/NotificationToast";
 
+import { DEFAULT_PRESETS } from "./utils/presets";
+
 export default function App() {
   const [gameState, setGameState] = useState<GameState>({
     score: 0,
@@ -111,19 +113,18 @@ export default function App() {
     }
   };
 
-  // Load preset quiz from server
+  // Load preset quiz locally to support offline play
   const handleUsePreset = async (category: string) => {
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/preset-quiz?category=${category}`);
-      const data = await res.json();
-      if (data.questions && data.questions.length > 0) {
-        launchQuizGame(data.questions);
+      const presetQuestions = DEFAULT_PRESETS[category as keyof typeof DEFAULT_PRESETS] || DEFAULT_PRESETS.general;
+      if (presetQuestions && presetQuestions.length > 0) {
+        launchQuizGame(presetQuestions);
       } else {
         showToast("Failed to load preset quiz", "error");
       }
     } catch {
-      showToast("Error connecting to server preset", "error");
+      showToast("Error loading preset", "error");
     } finally {
       setIsLoading(false);
     }
