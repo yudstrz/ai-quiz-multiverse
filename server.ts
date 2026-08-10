@@ -89,8 +89,7 @@ Study Material:
 ${sourceText.substring(0, 100000)}
 """`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-flash",
+    const generateConfig = {
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -121,7 +120,21 @@ ${sourceText.substring(0, 100000)}
           },
         },
       },
-    });
+    };
+
+    let response;
+    try {
+      response = await ai.models.generateContent({
+        model: "gemini-3.1-flash-lite",
+        ...generateConfig
+      });
+    } catch (error) {
+      console.log("Model gemini-3.1-flash-lite failed, falling back to gemini-3.5-flash");
+      response = await ai.models.generateContent({
+        model: "gemini-3.5-flash",
+        ...generateConfig
+      });
+    }
 
     const jsonText = response.text ? response.text.trim() : "[]";
     const questions = JSON.parse(jsonText);

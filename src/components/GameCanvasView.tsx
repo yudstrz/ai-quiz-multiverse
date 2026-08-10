@@ -629,10 +629,10 @@ export const GameCanvasView: React.FC<GameCanvasViewProps> = ({
         ctx.translate(dx, dy);
       }
 
-      // Cyberpunk Background Gradient (Semi-transparent for trail effect)
+      // Cyberpunk Background Gradient (Solid to prevent lag)
       const bgGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      bgGrad.addColorStop(0, "rgba(2, 6, 23, 0.4)");
-      bgGrad.addColorStop(1, "rgba(15, 23, 42, 0.4)");
+      bgGrad.addColorStop(0, "#020617");
+      bgGrad.addColorStop(1, "#0f172a");
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 

@@ -98,10 +98,12 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
     <div className="w-full max-w-xl mx-auto min-h-screen p-4 md:p-6 flex flex-col justify-start bg-slate-950 text-white">
       {/* Header / Title Banner */}
       <div className="text-center my-4 relative">
-        <PWAInstallButton showToast={showToast} />
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold mb-2 mt-4 md:mt-0">
-          <Bot className="w-4 h-4 text-blue-400 animate-pulse" />
-          <span>Powered by Google Gemini AI</span>
+        <div className="flex justify-center items-center gap-2 mb-2 mt-4 md:mt-0 flex-wrap">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold">
+            <Bot className="w-4 h-4 text-blue-400 animate-pulse" />
+            <span>Powered by Google Gemini AI</span>
+          </div>
+          <PWAInstallButton showToast={showToast} />
         </div>
         <h1 className="text-3xl md:text-4xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-300 to-purple-400">
           AI Quiz Multiverse
@@ -222,8 +224,8 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
               </div>
 
               {avatarConfig.shape === "emoji" ? (
-                <div className="col-span-2">
-                  <span className="text-[10px] text-slate-400 block mb-1">Type an Emoji</span>
+                <div className="col-span-2 flex flex-col justify-start">
+                  <span className="text-[10px] text-slate-400 block mb-1">Type or Pick Emoji</span>
                   <input
                     type="text"
                     maxLength={2}
@@ -234,9 +236,21 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
                         emojiChar: e.target.value,
                       }))
                     }
-                    className="w-full bg-slate-900 text-white text-lg p-1.5 rounded-lg border border-slate-700 focus:outline-none text-center"
+                    className="w-full bg-slate-900 text-white text-lg py-0.5 px-1.5 rounded-lg border border-slate-700 focus:outline-none text-center"
                     placeholder="👽"
                   />
+                  <div className="flex justify-between items-center mt-1.5 px-1">
+                    {["👽", "👻", "🤖", "🚀", "🐱", "💩", "🍔"].map(emoji => (
+                      <button 
+                        key={emoji}
+                        onClick={() => setAvatarConfig(prev => ({ ...prev, emojiChar: emoji }))}
+                        className="hover:scale-125 transition-transform text-sm"
+                        title={emoji}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               ) : (
                 <>

@@ -47,7 +47,7 @@ export const PWAInstallButton: React.FC<{ showToast: (msg: string, type?: "error
   return (
     <button
       onClick={handleInstallClick}
-      className="absolute -top-2 right-0 flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/20 hover:bg-blue-500/40 border border-blue-500/50 rounded-full text-blue-300 text-[10px] md:text-xs font-bold transition-colors"
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/20 hover:bg-blue-500/40 border border-blue-500/50 rounded-full text-blue-300 text-[10px] md:text-xs font-bold transition-colors"
     >
       <Download className="w-3.5 h-3.5" />
       Install App
