@@ -15,7 +15,7 @@ import { GameCanvasView } from "./components/GameCanvasView";
 import { ResultScreen } from "./components/ResultScreen";
 import { NotificationToast } from "./components/NotificationToast";
 
-import { DEFAULT_PRESETS } from "./utils/presets";
+import { getPresetQuestions } from "./utils/presets";
 
 export default function App() {
   const [gameState, setGameState] = useState<GameState>({
@@ -72,6 +72,29 @@ export default function App() {
     });
   };
 
+  // Load preset quiz locally to support offline play & fallback
+  const handleUsePreset = (category: string, lang: Language = language) => {
+    setIsLoading(true);
+    try {
+      const presetQuestions = getPresetQuestions(category, lang);
+      if (presetQuestions && presetQuestions.length > 0) {
+        launchQuizGame(presetQuestions);
+      } else {
+        showToast(
+          lang === "Indonesian" ? "Gagal memuat preset kuis" : "Failed to load preset quiz",
+          "error"
+        );
+      }
+    } catch {
+      showToast(
+        lang === "Indonesian" ? "Terjadi kesalahan memuat kuis" : "Error loading preset",
+        "error"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Call Server API to generate AI quiz from text notes
   const handleGenerateAI = async (
     sourceText: string,
@@ -92,49 +115,54 @@ export default function App() {
         }),
       });
 
-      const data = await res.json();
-
       if (!res.ok) {
-        if (data.isMissingKey) {
-          showToast(
-            "Gemini API key missing on server. Using fallback trivia preset.",
-            "info"
-          );
-          handleUsePreset("general");
-          return;
+        let errMsg = `Server error (${res.status})`;
+        try {
+          const errData = await res.json();
+          if (errData.isMissingKey) {
+            showToast(
+              lang === "Indonesian"
+                ? "API key Gemini belum disetel di server. Memuat contoh kuis trivia."
+                : "Gemini API key missing on server. Using fallback trivia preset.",
+              "info"
+            );
+            handleUsePreset("general", lang);
+            return;
+          }
+          errMsg = errData.error || errMsg;
+        } catch {
+          // If response body was HTML (404/500 from Vercel/proxy), don't crash JSON parser
+          errMsg = `Server error (${res.status}): API endpoint unavailable.`;
         }
-        throw new Error(data.error || "Failed to generate AI quiz");
+        throw new Error(errMsg);
+      }
+
+      let data: { questions?: QuestionItem[] };
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error("Invalid response format from server.");
       }
 
       if (!data.questions || data.questions.length === 0) {
-        throw new Error("No questions were generated.");
+        throw new Error(
+          lang === "Indonesian"
+            ? "Tidak ada pertanyaan kuis yang berhasil dibuat."
+            : "No questions were generated."
+        );
       }
 
-      showToast("AI Quiz created successfully!", "success");
+      showToast(
+        lang === "Indonesian" ? "Kuis AI berhasil dibuat!" : "AI Quiz created successfully!",
+        "success"
+      );
       launchQuizGame(data.questions);
     } catch (err: unknown) {
       console.error("AI Generation error:", err);
-      const msg = err instanceof Error ? err.message : "AI Generation failed. Loading demo preset.";
+      const msg = err instanceof Error ? err.message : "AI Generation failed.";
       showToast(msg, "error");
-      // Fallback
-      handleUsePreset("general");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Load preset quiz locally to support offline play
-  const handleUsePreset = async (category: string) => {
-    setIsLoading(true);
-    try {
-      const presetQuestions = DEFAULT_PRESETS[category as keyof typeof DEFAULT_PRESETS] || DEFAULT_PRESETS.general;
-      if (presetQuestions && presetQuestions.length > 0) {
-        launchQuizGame(presetQuestions);
-      } else {
-        showToast("Failed to load preset quiz", "error");
-      }
-    } catch {
-      showToast("Error loading preset", "error");
+      // Fallback using user's selected language!
+      handleUsePreset("general", lang);
     } finally {
       setIsLoading(false);
     }

@@ -6,7 +6,7 @@ import { PWAInstallButton } from "./PWAInstallButton";
 
 interface SetupScreenProps {
   onGenerateAI: (sourceText: string, questionCount: number, difficulty: DifficultyLevel, language: Language) => Promise<void>;
-  onUsePreset: (category: string) => void;
+  onUsePreset: (category: string, language?: Language) => void;
   gameMode: GameMode;
   setGameMode: (mode: GameMode) => void;
   avatarConfig: AvatarConfig;
@@ -156,7 +156,7 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
               <button
                 key={p.key}
                 type="button"
-                onClick={() => onUsePreset(p.key)}
+                onClick={() => onUsePreset(p.key, language)}
                 disabled={busy}
                 className="btn-px py-2 text-[8px] justify-center"
                 aria-label={`Use ${p.label} preset`}
@@ -351,7 +351,7 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
           </button>
           <button
             type="button"
-            onClick={() => onUsePreset("general")}
+            onClick={() => onUsePreset("general", language)}
             className="btn-px w-full py-3 justify-center text-[9px]"
             aria-label="Play default trivia quiz"
           >

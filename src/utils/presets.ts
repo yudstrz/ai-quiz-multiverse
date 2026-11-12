@@ -1,4 +1,6 @@
-export const DEFAULT_PRESETS = {
+import { Language, QuestionItem } from "../types";
+
+export const DEFAULT_PRESETS_EN: Record<string, QuestionItem[]> = {
   general: [
     {
       question: "What is the capital city of France?",
@@ -54,7 +56,7 @@ export const DEFAULT_PRESETS = {
       question: "Which method converts a JSON string into a JS object?",
       options: ["JSON.stringify()", "JSON.parse()", "JSON.toObject()", "Object.parse()"],
       answer: 1,
-      explanation: "JSON.parse() parses a JSON string into a JavaScript value/object.",
+      explanation: "JSON.parse() parses a JSON string into a JavaScript value or object.",
     },
     {
       question: "What is the primary function of Vite in modern web development?",
@@ -96,3 +98,111 @@ export const DEFAULT_PRESETS = {
     },
   ],
 };
+
+export const DEFAULT_PRESETS_ID: Record<string, QuestionItem[]> = {
+  general: [
+    {
+      question: "Apa ibu kota dari negara Perancis?",
+      options: ["Berlin", "Paris", "Madrid", "Roma"],
+      answer: 1,
+      explanation: "Paris adalah ibu kota dan kota terbesar di Perancis.",
+    },
+    {
+      question: "Unsur kimia dengan lambang 'O' adalah?",
+      options: ["Emas", "Osmium", "Oksigen", "Seng"],
+      answer: 2,
+      explanation: "Oksigen adalah unsur kimia dengan lambang O dan nomor atom 8.",
+    },
+    {
+      question: "Berapakah hasil dari 12 x 12?",
+      options: ["120", "144", "132", "154"],
+      answer: 1,
+      explanation: "12 dikalikan dengan 12 menghasilkan 144.",
+    },
+    {
+      question: "Planet manakah yang dijuluki sebagai Planet Merah?",
+      options: ["Venus", "Jupiter", "Mars", "Saturnus"],
+      answer: 2,
+      explanation: "Mars tampak kemerahan karena adanya besi oksida (karat) di permukaannya.",
+    },
+    {
+      question: "Warna yang dihasilkan dari campuran Biru + Kuning?",
+      options: ["Ungu", "Hijau", "Oranye", "Cokelat"],
+      answer: 1,
+      explanation: "Percampuran warna biru dan kuning menghasilkan warna hijau.",
+    },
+  ],
+  programming: [
+    {
+      question: "Bahasa yang berjalan secara native di peramban web?",
+      options: ["Python", "Java", "JavaScript", "C++"],
+      answer: 2,
+      explanation: "JavaScript adalah bahasa skrip native untuk seluruh browser web modern.",
+    },
+    {
+      question: "Apakah kepanjangan dari HTML?",
+      options: ["Hyper Text Markup Language", "High Tech Modern Language", "Hyperlink Text Mode Link", "Home Tool Markup Language"],
+      answer: 0,
+      explanation: "HTML adalah singkatan dari HyperText Markup Language, format standar dokumen web.",
+    },
+    {
+      question: "Pada CSS, simbol apa yang memilih elemen berdasarkan class?",
+      options: ["#pagar", ".titik", ":titik-dua", "@at"],
+      answer: 1,
+      explanation: "Simbol titik (.) digunakan untuk memilih selector class dalam CSS.",
+    },
+    {
+      question: "Metode apa yang mengubah teks JSON menjadi objek JavaScript?",
+      options: ["JSON.stringify()", "JSON.parse()", "JSON.toObject()", "Object.parse()"],
+      answer: 1,
+      explanation: "JSON.parse() memproses string format JSON menjadi objek atau nilai JavaScript.",
+    },
+    {
+      question: "Apa fungsi utama Vite dalam pengembangan web modern?",
+      options: ["Database ORM", "Frontend Build Tool", "Compiler CSS", "Version Control"],
+      answer: 1,
+      explanation: "Vite adalah perkakas build frontend dan server dev modern yang sangat cepat.",
+    },
+  ],
+  space: [
+    {
+      question: "Planet manakah yang paling besar di Tata Surya kita?",
+      options: ["Saturnus", "Jupiter", "Neptunus", "Uranus"],
+      answer: 1,
+      explanation: "Massa Jupiter lebih dari dua kali lipat gabungan seluruh planet lainnya.",
+    },
+    {
+      question: "Gaya apa yang menjaga planet tetap mengorbit Matahari?",
+      options: ["Magnet", "Gravitasi", "Gesekan", "Sentrifugal"],
+      answer: 1,
+      explanation: "Gaya gravitasi menarik benda langit sehingga tetap stabil pada orbitnya.",
+    },
+    {
+      question: "Di galaksi manakah planet Bumi berada?",
+      options: ["Andromeda", "Bima Sakti", "Sombrero", "Triangulum"],
+      answer: 1,
+      explanation: "Bumi berada di Lengan Orion dalam galaksi Bima Sakti (Milky Way).",
+    },
+    {
+      question: "Berapa lama cahaya matahari menempuh perjalanan ke Bumi?",
+      options: ["8 Detik", "8 Menit", "8 Jam", "8 Hari"],
+      answer: 1,
+      explanation: "Cahaya bergerak secepat 300.000 km/s dan butuh sekitar 8 menit 20 detik sampai ke Bumi.",
+    },
+    {
+      question: "Benda langit utama penyebab pasang surut laut di Bumi?",
+      options: ["Matahari", "Bulan", "Mars", "Asteroid"],
+      answer: 1,
+      explanation: "Gaya gravitasi Bulan menjadi tarikan terkuat penyebab pasang surut air laut di Bumi.",
+    },
+  ],
+};
+
+// Backward-compatible default export
+export const DEFAULT_PRESETS = DEFAULT_PRESETS_EN;
+
+export function getPresetQuestions(category: string, language: Language = "English"): QuestionItem[] {
+  const dictionary = language === "Indonesian" ? DEFAULT_PRESETS_ID : DEFAULT_PRESETS_EN;
+  const list = dictionary[category] || dictionary.general;
+  return list || DEFAULT_PRESETS_EN.general;
+}

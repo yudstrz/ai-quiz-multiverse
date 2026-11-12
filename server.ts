@@ -3,7 +3,8 @@ import path from "path";
 import "dotenv/config";
 import { GoogleGenAI, Type } from "@google/genai";
 import { createServer as createViteServer } from "vite";
-import { DEFAULT_PRESETS } from "./src/utils/presets";
+import { getPresetQuestions } from "./src/utils/presets";
+import { Language } from "./src/types";
 
 const app = express();
 const PORT = 3000;
@@ -20,7 +21,7 @@ function getGeminiClient(customApiKey?: string) {
     apiKey: apiKey,
     httpOptions: {
       headers: {
-        "User-Agent": "aistudio-build",
+        "User-Agent": "max-quizverse-server",
       },
     },
   });
@@ -28,14 +29,14 @@ function getGeminiClient(customApiKey?: string) {
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", hasApiKey: !!process.env.GEMINI_API_KEY });
+  res.json({ status: "ok", hasApiKey: !!process.env.GEMINI_API_KEY, name: "Max Quizverse API" });
 });
 
 // Default pre-packaged quizzes for instant play or fallback
-
 app.get("/api/preset-quiz", (req, res) => {
   const category = (req.query.category as string) || "general";
-  const questions = DEFAULT_PRESETS[category as keyof typeof DEFAULT_PRESETS] || DEFAULT_PRESETS.general;
+  const language = (req.query.language as Language) || "English";
+  const questions = getPresetQuestions(category, language);
   res.json({ questions });
 });
 
@@ -73,9 +74,14 @@ app.post("/api/generate-quiz", async (req, res) => {
       difficultyInstruction = "7. Difficulty Level: MEDIUM. Balanced mix of core concepts, practical comprehension, and standard knowledge testing.";
     }
 
-    const languageInstruction = language === "Indonesian"
-      ? "6. Write the entire quiz strictly in Indonesian (Bahasa Indonesia). All questions, options, and explanations must be in Indonesian."
-      : `6. Write the entire quiz strictly in ${language} language. All questions, options, and explanations must be in ${language}.`;
+    const isIndo = language?.toString().toLowerCase().includes("indo");
+    const languageInstruction = isIndo
+      ? "PERATURAN BAHASA MUTLAK: Seluruh kuis (pertanyaan, 4 opsi pilihan jawaban, dan penjelasan) WAJIB ditulis 100% dalam BAHASA INDONESIA yang baku dan santun. Dilarang menghasilkan pertanyaan atau opsi dalam bahasa Inggris meskipun materi sumber berbahasa Inggris. Terjemahkan konsepnya."
+      : "LANGUAGE REQUIREMENT: Write the entire quiz (questions, options, and explanations) strictly in English.";
+
+    const systemInstruction = isIndo
+      ? "Anda adalah pembuat kuis edukasi arcade profesional. Output Anda WAJIB 100% dalam Bahasa Indonesia. Semua pertanyaan, 4 pilihan jawaban, dan penjelasan harus dalam Bahasa Indonesia."
+      : "You are an expert arcade educational quiz creator. Write all questions, options, and explanations in English.";
 
     const prompt = `You are an expert educational quiz author and game master.
 Create an engaging multiple-choice quiz based strictly on the provided study materials or notes.
@@ -91,12 +97,13 @@ ${difficultyInstruction}
 
 Study Material:
 """
-${sourceText.substring(0, 100000)}
+${sourceText.substring(0, 80000)}
 """`;
 
     const generateConfig = {
       contents: prompt,
       config: {
+        systemInstruction,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.ARRAY,
@@ -130,30 +137,22 @@ ${sourceText.substring(0, 100000)}
     let response;
     try {
       response = await ai.models.generateContent({
-        model: "gemini-3.1-flash-lite",
+        model: "gemini-2.5-flash",
         ...generateConfig
       });
     } catch (error: any) {
-      console.warn("Model gemini-3.1-flash-lite failed, falling back to gemini-3.5-flash:", error?.message || error);
+      console.warn("Model gemini-2.5-flash failed, falling back to gemini-2.0-flash:", error?.message || error);
       try {
         response = await ai.models.generateContent({
-          model: "gemini-3.5-flash",
+          model: "gemini-2.0-flash",
           ...generateConfig
         });
       } catch (fbError: any) {
-        console.warn("Model gemini-3.5-flash failed, falling back to gemini-2.5-flash:", fbError?.message || fbError);
-        try {
-          response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
-            ...generateConfig
-          });
-        } catch (e3: any) {
-          console.warn("Model gemini-2.5-flash failed, falling back to gemini-2.0-flash:", e3?.message || e3);
-          response = await ai.models.generateContent({
-            model: "gemini-2.0-flash",
-            ...generateConfig
-          });
-        }
+        console.warn("Model gemini-2.0-flash failed, falling back to gemini-1.5-flash:", fbError?.message || fbError);
+        response = await ai.models.generateContent({
+          model: "gemini-1.5-flash",
+          ...generateConfig
+        });
       }
     }
 
