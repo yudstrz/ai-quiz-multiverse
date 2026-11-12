@@ -129,7 +129,11 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
           value={sourceText}
           onChange={e => setSourceText(e.target.value)}
           disabled={busy}
-          placeholder="Paste study notes, article, or upload PDF/DOCX..."
+          placeholder={
+            language === "Indonesian"
+              ? "Tempel materi catatan, artikel, atau unggah PDF/DOCX (maks 50.000 karakter)..."
+              : "Paste study notes, article, or upload PDF/DOCX (max 50,000 chars)..."
+          }
           rows={5}
           aria-label="Source text"
           className="w-full text-[9px] leading-loose resize-none focus:outline-none p-2 placeholder:text-[var(--color-px-muted)]"
@@ -140,6 +144,35 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
             fontFamily: "var(--font-pixel)",
           }}
         />
+
+        {/* Character Counter & Context Window Helper */}
+        <div className="flex items-center justify-between text-[7px] text-[var(--color-px-dim)] px-1">
+          <div className="flex items-center gap-1.5">
+            <span style={{ color: sourceText.length > 50000 ? "var(--color-px-amber)" : "var(--color-px-dim)" }}>
+              {sourceText.length.toLocaleString()} / 50,000 CHARS
+            </span>
+            <span>·</span>
+            <span>~{(sourceText.trim() ? sourceText.trim().split(/\s+/).length : 0).toLocaleString()} WORDS</span>
+          </div>
+          {sourceText.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setSourceText("")}
+              disabled={busy}
+              className="text-[var(--color-px-red)] hover:underline cursor-pointer"
+            >
+              [CLEAR]
+            </button>
+          )}
+        </div>
+
+        {sourceText.length > 50000 && (
+          <div className="card-px p-1.5 text-[7px] leading-relaxed text-[var(--color-px-amber)] border-[var(--color-px-amber)]!">
+            ⚠️ {language === "Indonesian"
+              ? "Teks melebihi 50.000 karakter. Gemini akan memprioritaskan 50.000 karakter pertama agar kuis fokus dan tidak melebihi konteks."
+              : "Text exceeds 50,000 characters. Gemini will prioritize the first 50,000 characters to stay within optimal context."}
+          </div>
+        )}
 
         {/* Presets */}
         <div>
@@ -333,9 +366,28 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
 
       {/* ── Action buttons ── */}
       {busy ? (
-        <div className="card-px flex flex-col items-center gap-2 py-5 text-[8px] text-[var(--color-px-blue)]">
-          <div className="w-6 h-6 border-2 border-current border-t-transparent animate-spin" />
-          GEMINI IS CRAFTING YOUR QUIZ...
+        <div
+          className="card-px flex flex-col items-center justify-center gap-3 py-6 px-4 text-center border-[var(--color-px-yellow)]!"
+          role="status"
+          aria-live="polite"
+        >
+          {/* Retro Pixel Blocks Loading Animation */}
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 bg-[var(--color-px-yellow)] shadow-px animate-bounce" style={{ animationDuration: "0.8s", animationDelay: "0ms" }} />
+            <span className="w-3 h-3 bg-[var(--color-px-blue)] shadow-px animate-bounce" style={{ animationDuration: "0.8s", animationDelay: "150ms" }} />
+            <span className="w-3 h-3 bg-[var(--color-px-green)] shadow-px animate-bounce" style={{ animationDuration: "0.8s", animationDelay: "300ms" }} />
+            <span className="w-3 h-3 bg-[var(--color-px-red)] shadow-px animate-bounce" style={{ animationDuration: "0.8s", animationDelay: "450ms" }} />
+          </div>
+
+          <div className="text-[9px] uppercase tracking-wider text-[var(--color-px-yellow)]">
+            {isExtracting
+              ? (language === "Indonesian" ? "MEMBACA DOKUMEN..." : "EXTRACTING DOCUMENT...")
+              : (language === "Indonesian" ? "GEMINI SEDANG MERACIK KUIS..." : "GEMINI IS CRAFTING YOUR QUIZ...")}
+          </div>
+
+          <div className="text-[7px] text-[var(--color-px-dim)] uppercase tracking-widest">
+            {language === "Indonesian" ? "MOHON TUNGGU SEBENTAR" : "LOADING ARCADE DATA"}
+          </div>
         </div>
       ) : (
         <div className="flex flex-col gap-2 pb-6">

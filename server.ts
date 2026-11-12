@@ -95,9 +95,9 @@ Instructions:
 ${languageInstruction}
 ${difficultyInstruction}
 
-Study Material:
+Study Material (context-safe max 50,000 characters):
 """
-${sourceText.substring(0, 80000)}
+${sourceText.substring(0, 50000)}
 """`;
 
     const generateConfig = {
@@ -134,26 +134,32 @@ ${sourceText.substring(0, 80000)}
       },
     };
 
-    let response;
-    try {
-      response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        ...generateConfig
-      });
-    } catch (error: any) {
-      console.warn("Model gemini-2.5-flash failed, falling back to gemini-2.0-flash:", error?.message || error);
+    const candidateModels = [
+      "gemini-3.8-flash",
+      "gemini-2.5-flash",
+      "gemini-2.0-flash",
+    ];
+
+    let response: any = null;
+    let lastError: any = null;
+
+    for (const model of candidateModels) {
       try {
         response = await ai.models.generateContent({
-          model: "gemini-2.0-flash",
-          ...generateConfig
+          model,
+          ...generateConfig,
         });
-      } catch (fbError: any) {
-        console.warn("Model gemini-2.0-flash failed, falling back to gemini-1.5-flash:", fbError?.message || fbError);
-        response = await ai.models.generateContent({
-          model: "gemini-1.5-flash",
-          ...generateConfig
-        });
+        if (response && response.text) {
+          break;
+        }
+      } catch (err: any) {
+        lastError = err;
+        console.warn(`Model ${model} failed, trying next candidate:`, err?.message || err);
       }
+    }
+
+    if (!response || !response.text) {
+      throw lastError || new Error("Failed to generate quiz with candidate models.");
     }
 
     const jsonText = response.text ? response.text.trim() : "[]";

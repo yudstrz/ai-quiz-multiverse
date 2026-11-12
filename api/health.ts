@@ -7,3 +7,4 @@ export default function handler(req: any, res: any) {
     name: "Max Quizverse API",
   });
 }
+
