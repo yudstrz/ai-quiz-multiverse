@@ -59,18 +59,35 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
   }
 
   const handleDownload = () => {
-    let content = "=== AI MULTIVERSE QUIZ ===\n\n";
+    let content = "========================================\n";
+    content += "        AI QUIZ MULTIVERSE SUMMARY       \n";
+    content += "========================================\n\n";
+    content += `Final Score   : ${score} PTS\n`;
+    content += `Correct Count : ${correctCount} / ${totalQuestions} (${percentage}%)\n`;
+    content += `Rank / Badge  : ${gradeBadge}\n`;
+    content += `Generated On  : ${new Date().toLocaleString()}\n`;
+    content += "\n----------------------------------------\n";
+    content += "QUESTIONS & REVIEW:\n";
+    content += "----------------------------------------\n\n";
+
     history.forEach((item, idx) => {
-      content += `Q${idx + 1}. ${item.question}\n`;
-      content += `Answer: ${item.correctAnswerText}\n`;
-      content += `Explanation: ${item.explanation}\n\n`;
+      content += `[Q${idx + 1}] ${item.question}\n`;
+      content += `Your Answer   : ${item.selectedOptionText} [${item.isCorrect ? "✓ CORRECT" : "✗ WRONG"}]\n`;
+      content += `Correct Answer: ${item.correctAnswerText}\n`;
+      if (item.explanation) {
+        content += `Explanation   : ${item.explanation}\n`;
+      }
+      content += "\n";
     });
+
+    content += "========================================\n";
+    content += "Keep learning with AI Quiz Multiverse!\n";
     
-    const blob = new Blob([content], { type: "text/plain" });
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "multiverse_quiz.txt";
+    a.download = `quiz-summary-${Date.now()}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -161,7 +178,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
           className="w-full py-3 px-4 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 rounded-xl font-bold text-xs md:text-sm border border-blue-500/20 transition-transform active:scale-98 flex items-center justify-center gap-2"
         >
           <Download className="w-4 h-4" />
-          <span>Download Quiz Summary</span>
+          <span>Download Quiz Summary (.txt)</span>
         </button>
         
         <div className="grid grid-cols-2 gap-3">

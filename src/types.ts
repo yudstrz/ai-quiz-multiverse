@@ -24,12 +24,16 @@ export interface HistoryItem {
   selectedOptionText: string;
   correctAnswerText: string;
   explanation: string;
+  pointsEarned?: number;
+  streakAtAnswer?: number;
 }
 
 export interface GameState {
   score: number;
   correctAnswers: number;
   currentIndex: number;
+  streak: number;
+  maxStreak: number;
   questions: QuestionItem[];
   history: HistoryItem[];
   isFinished: boolean;

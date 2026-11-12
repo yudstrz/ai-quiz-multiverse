@@ -27,6 +27,8 @@ export default function App() {
     isFinished: false,
     isPlaying: false,
     soundEnabled: true,
+    streak: 0,
+    maxStreak: 0,
   });
 
   const [gameMode, setGameMode] = useState<GameMode>("normal");
@@ -65,6 +67,8 @@ export default function App() {
       isFinished: false,
       isPlaying: true,
       soundEnabled: true,
+      streak: 0,
+      maxStreak: 0,
     });
   };
 
@@ -142,12 +146,19 @@ export default function App() {
   ) => {
     setGameState((prev) => {
       const currentQ = prev.questions[prev.currentIndex];
+      // compute new streak value
+      const newStreak = isCorrect ? prev.streak + 1 : 0;
+      const newMaxStreak = Math.max(prev.maxStreak, newStreak);
+      // points: base 100 for correct, plus 20 per combo after first correct
+      const pointsEarned = isCorrect ? 100 + Math.max(0, newStreak - 1) * 20 : 0;
       const newHistoryItem: HistoryItem = {
         question: currentQ.question,
         isCorrect,
         selectedOptionText,
         correctAnswerText: currentQ.options[currentQ.answer],
         explanation: currentQ.explanation,
+        pointsEarned,
+        streakAtAnswer: newStreak,
       };
 
       const nextIndex = prev.currentIndex + 1;
@@ -155,10 +166,12 @@ export default function App() {
 
       return {
         ...prev,
-        score: isCorrect ? prev.score + 100 : prev.score,
+        score: prev.score + pointsEarned,
         correctAnswers: isCorrect ? prev.correctAnswers + 1 : prev.correctAnswers,
         currentIndex: nextIndex,
         history: [...prev.history, newHistoryItem],
+        streak: newStreak,
+        maxStreak: newMaxStreak,
         isFinished,
         isPlaying: !isFinished,
       };

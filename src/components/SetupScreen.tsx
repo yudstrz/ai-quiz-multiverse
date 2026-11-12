@@ -239,12 +239,13 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
                     className="w-full bg-slate-900 text-white text-lg py-0.5 px-1.5 rounded-lg border border-slate-700 focus:outline-none text-center"
                     placeholder="👽"
                   />
-                  <div className="flex justify-between items-center mt-1.5 px-1">
-                    {["👽", "👻", "🤖", "🚀", "🐱", "💩", "🍔"].map(emoji => (
+                  <div className="flex flex-wrap gap-2 justify-center items-center mt-2 px-1">
+                    {["👽", "👻", "🤖", "🚀", "🐱", "🦁", "⚡", "🎮", "🔥", "⭐", "🍕", "💩"].map(emoji => (
                       <button 
+                        type="button"
                         key={emoji}
                         onClick={() => setAvatarConfig(prev => ({ ...prev, emojiChar: emoji }))}
-                        className="hover:scale-125 transition-transform text-sm"
+                        className={`w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-800 hover:scale-125 transition-all text-base ${avatarConfig.emojiChar === emoji ? 'bg-blue-600/30 border border-blue-500' : ''}`}
                         title={emoji}
                       >
                         {emoji}

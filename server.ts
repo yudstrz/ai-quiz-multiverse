@@ -11,8 +11,8 @@ const PORT = 3000;
 app.use(express.json({ limit: "10mb" }));
 
 // Server-side Gemini initialization
-function getGeminiClient() {
-  const apiKey = process.env.GEMINI_API_KEY;
+function getGeminiClient(customApiKey?: string) {
+  const apiKey = customApiKey || process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return null;
   }
@@ -42,17 +42,18 @@ app.get("/api/preset-quiz", (req, res) => {
 // Endpoint to generate quiz using Gemini 3.6 Flash
 app.post("/api/generate-quiz", async (req, res) => {
   try {
-    const { sourceText, questionCount = 5, difficulty = "medium", language = "auto" } = req.body;
+    const { sourceText, questionCount = 5, difficulty = "medium", language = "auto", apiKey: clientApiKey } = req.body;
+    const headerApiKey = req.headers["x-gemini-api-key"] as string | undefined;
 
     if (!sourceText || typeof sourceText !== "string" || sourceText.trim().length === 0) {
       return res.status(400).json({ error: "Source text is required to generate quiz." });
     }
 
-    const ai = getGeminiClient();
+    const ai = getGeminiClient(clientApiKey || headerApiKey);
     if (!ai) {
       // Fallback response with notice if API key is missing
       return res.status(503).json({
-        error: "GEMINI_API_KEY environment variable is missing on the server. Please check Settings > Secrets.",
+        error: "GEMINI_API_KEY environment variable is missing on the server. Please check Settings > Secrets or .env file.",
         isMissingKey: true
       });
     }
@@ -72,6 +73,10 @@ app.post("/api/generate-quiz", async (req, res) => {
       difficultyInstruction = "7. Difficulty Level: MEDIUM. Balanced mix of core concepts, practical comprehension, and standard knowledge testing.";
     }
 
+    const languageInstruction = language === "Indonesian"
+      ? "6. Write the entire quiz strictly in Indonesian (Bahasa Indonesia). All questions, options, and explanations must be in Indonesian."
+      : `6. Write the entire quiz strictly in ${language} language. All questions, options, and explanations must be in ${language}.`;
+
     const prompt = `You are an expert educational quiz author and game master.
 Create an engaging multiple-choice quiz based strictly on the provided study materials or notes.
 
@@ -81,7 +86,7 @@ Instructions:
 3. Option strings MUST be concise (1 to 4 words max) so they fit inside animated arcade game blocks.
 4. Ensure index 'answer' is an integer between 0 and 3 indicating the correct option.
 5. Provide a clear, friendly explanation (1-2 sentences) explaining why that answer is correct.
-6. Write the quiz strictly in ${language} language.
+${languageInstruction}
 ${difficultyInstruction}
 
 Study Material:
@@ -128,12 +133,28 @@ ${sourceText.substring(0, 100000)}
         model: "gemini-3.1-flash-lite",
         ...generateConfig
       });
-    } catch (error) {
-      console.log("Model gemini-3.1-flash-lite failed, falling back to gemini-3.5-flash");
-      response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
-        ...generateConfig
-      });
+    } catch (error: any) {
+      console.warn("Model gemini-3.1-flash-lite failed, falling back to gemini-3.5-flash:", error?.message || error);
+      try {
+        response = await ai.models.generateContent({
+          model: "gemini-3.5-flash",
+          ...generateConfig
+        });
+      } catch (fbError: any) {
+        console.warn("Model gemini-3.5-flash failed, falling back to gemini-2.5-flash:", fbError?.message || fbError);
+        try {
+          response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            ...generateConfig
+          });
+        } catch (e3: any) {
+          console.warn("Model gemini-2.5-flash failed, falling back to gemini-2.0-flash:", e3?.message || e3);
+          response = await ai.models.generateContent({
+            model: "gemini-2.0-flash",
+            ...generateConfig
+          });
+        }
+      }
     }
 
     const jsonText = response.text ? response.text.trim() : "[]";
