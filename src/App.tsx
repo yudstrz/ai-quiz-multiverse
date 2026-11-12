@@ -208,7 +208,7 @@ export default function App() {
   const currentQuestion = gameState.questions[gameState.currentIndex];
 
   return (
-    <div className="min-h-screen bg-slate-950 font-sans text-white relative overflow-x-hidden flex flex-col justify-between">
+    <div className="min-h-screen overflow-x-hidden flex flex-col" style={{ background: "var(--color-px-bg)", color: "var(--color-px-text)" }}>
       <NotificationToast message={toastMessage} type={toastType} />
 
       {/* Screen 1: Setup / Home */}

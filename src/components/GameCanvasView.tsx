@@ -239,49 +239,39 @@ export const GameCanvasView: React.FC<GameCanvasViewProps> = ({
     ) => {
       context.save();
 
-      // Pulsing outer neon glow
-      const glowPulse = Math.sin(frames * 0.08) * 4 + 12;
-      context.shadowColor = baseColor;
-      context.shadowBlur = glowPulse;
-
-      // Gradient body fill
-      const grad = context.createLinearGradient(x, y, x, y + height);
-      grad.addColorStop(0, `${baseColor}ee`);
-      grad.addColorStop(1, `${baseColor}66`);
-      context.fillStyle = grad;
-
-      context.beginPath();
-      context.roundRect(x, y, width, height, 14);
-      context.fill();
-
-      // Inner glass reflection highlight
+      // ── Pixel-art block: solid fill, NO gradient, NO glow ──
       context.shadowBlur = 0;
-      context.strokeStyle = "rgba(255, 255, 255, 0.45)";
+      context.fillStyle = baseColor;
+      context.fillRect(x, y, width, height);
+
+      // 2-px darker pixel outline (bottom-right shadow, top-left highlight)
+      context.strokeStyle = "rgba(0,0,0,0.9)";
       context.lineWidth = 2;
+      context.strokeRect(x, y, width, height);
+
+      // top/left bright edge (1px)
+      context.strokeStyle = "rgba(255,255,255,0.25)";
+      context.lineWidth = 1;
       context.beginPath();
-      context.roundRect(x + 1, y + 1, width - 2, height - 2, 13);
+      context.moveTo(x, y + height); context.lineTo(x, y); context.lineTo(x + width, y);
       context.stroke();
 
-      // Neon Letter Badge ([A], [B], [C], [D])
+      // Letter badge: solid square, no circle
       if (label) {
-        context.fillStyle = "rgba(0, 0, 0, 0.55)";
-        context.beginPath();
-        context.arc(x + 18, y + 18, 10, 0, Math.PI * 2);
-        context.fill();
-
-        context.strokeStyle = "rgba(255, 255, 255, 0.8)";
-        context.lineWidth = 1.5;
-        context.stroke();
-
+        const badgeSize = 16;
+        context.fillStyle = "rgba(0,0,0,0.7)";
+        context.fillRect(x + 4, y + 4, badgeSize, badgeSize);
+        context.strokeStyle = "rgba(255,255,255,0.6)";
+        context.lineWidth = 1;
+        context.strokeRect(x + 4, y + 4, badgeSize, badgeSize);
         context.fillStyle = "#ffffff";
-        context.font = "bold 11px monospace";
+        context.font = "bold 9px monospace";
         context.textAlign = "center";
         context.textBaseline = "middle";
-        context.fillText(label, x + 18, y + 18);
+        context.fillText(label, x + 4 + badgeSize / 2, y + 4 + badgeSize / 2);
       }
 
-      // Render Text
-      drawCenteredText(context, text, x, y, width, height, 14);
+      drawCenteredText(context, text, x, y, width, height, 11);
       context.restore();
     };
 
@@ -413,25 +403,21 @@ export const GameCanvasView: React.FC<GameCanvasViewProps> = ({
         return;
       }
 
-      // Outer glow pulse
-      const pulse = Math.sin(frames * 0.12) * 5 + 12;
-      ctx.shadowBlur = pulse;
-      ctx.shadowColor = avatarConfig.color;
-
+      // ── Pixel-art player: NO glow, crisp shapes ──
+      ctx.shadowBlur = 0;
       ctx.fillStyle = avatarConfig.color;
       ctx.beginPath();
 
       if (avatarConfig.shape === "hexagon") {
         for (let i = 0; i < 6; i++) {
-          const angle_deg = 60 * i - 30;
-          const angle_rad = (Math.PI / 180) * angle_deg;
-          const px = size * Math.cos(angle_rad);
-          const py = size * Math.sin(angle_rad);
+          const a = (Math.PI / 180) * (60 * i - 30);
+          const px = size * Math.cos(a);
+          const py = size * Math.sin(a);
           if (i === 0) ctx.moveTo(px, py);
           else ctx.lineTo(px, py);
         }
       } else if (avatarConfig.shape === "square") {
-        ctx.roundRect(-size, -size, size * 2, size * 2, 8);
+        ctx.rect(-size, -size, size * 2, size * 2);
       } else if (avatarConfig.shape === "circle") {
         ctx.arc(0, 0, size, 0, Math.PI * 2);
       }
@@ -439,10 +425,13 @@ export const GameCanvasView: React.FC<GameCanvasViewProps> = ({
       ctx.closePath();
       ctx.fill();
 
-      // Bright inner metallic border
-      ctx.shadowBlur = 0;
-      ctx.lineWidth = 2.5;
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+      // 2-px dark pixel border
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(0,0,0,0.9)";
+      ctx.stroke();
+      // 1-px white highlight edge
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "rgba(255,255,255,0.4)";
       ctx.stroke();
 
       if (avatarConfig.face) {

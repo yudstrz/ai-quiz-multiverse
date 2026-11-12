@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Check, X, Sparkles, Flame } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { QuestionItem } from "../types";
 import { sounds } from "../utils/soundEffects";
 
@@ -9,164 +9,152 @@ interface NormalQuizViewProps {
   streak?: number;
 }
 
+const LETTERS = ["A", "B", "C", "D"] as const;
+
+// Solid pixel‑palette per option — no gradients
+const OPTION_COLORS: { base: string; border: string }[] = [
+  { base: "#1a2a4a", border: "#3d9bff" },
+  { base: "#2a1a4a", border: "#9b6dff" },
+  { base: "#2a1a2a", border: "#ff3d57" },
+  { base: "#1a3a2a", border: "#00e676" },
+];
+
 export const NormalQuizView: React.FC<NormalQuizViewProps> = ({
   question,
   onSelectOption,
   streak = 0,
 }) => {
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [hasAnswered, setHasAnswered] = useState(false);
-  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [answered, setAnswered] = useState(false);
+  const [tid, setTid] = useState<ReturnType<typeof setTimeout> | null>(null);
 
+  // Reset on new question
   useEffect(() => {
-    setSelectedIndex(null);
-    setHasAnswered(false);
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-      setTimeoutId(null);
-    }
-  }, [question]);
+    setSelected(null);
+    setAnswered(false);
+    if (tid) { clearTimeout(tid); setTid(null); }
+  }, [question]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Keyboard shortcuts
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!hasAnswered) {
-        if (e.key === "1" || e.key.toLowerCase() === "a") handleOptionClick(0);
-        else if (e.key === "2" || e.key.toLowerCase() === "b") handleOptionClick(1);
-        else if (e.key === "3" || e.key.toLowerCase() === "c") handleOptionClick(2);
-        else if (e.key === "4" || e.key.toLowerCase() === "d") handleOptionClick(3);
-      } else if (e.key === "Enter" && selectedIndex !== null) {
-        if (timeoutId) clearTimeout(timeoutId);
-        onSelectOption(selectedIndex === question.answer, question.options[selectedIndex]);
+    const onKey = (e: KeyboardEvent) => {
+      if (!answered) {
+        const map: Record<string, number> = { "1": 0, a: 0, "2": 1, b: 1, "3": 2, c: 2, "4": 3, d: 3 };
+        const idx = map[e.key.toLowerCase()];
+        if (idx !== undefined) pick(idx);
+      } else if (e.key === "Enter" && selected !== null) {
+        if (tid) clearTimeout(tid);
+        onSelectOption(selected === question.answer, question.options[selected]);
       }
     };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [answered, question, tid, selected]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [hasAnswered, question, timeoutId, selectedIndex]);
-
-  const handleOptionClick = (index: number) => {
-    if (hasAnswered) return;
-
-    setSelectedIndex(index);
-    setHasAnswered(true);
-
-    const isCorrect = index === question.answer;
-    if (isCorrect) {
+  const pick = (idx: number) => {
+    if (answered) return;
+    setSelected(idx);
+    setAnswered(true);
+    const correct = idx === question.answer;
+    if (correct) {
       sounds.playCorrect();
-      if (streak > 0) {
-        setTimeout(() => sounds.playCombo(streak + 1), 160);
-      }
+      if (streak > 0) setTimeout(() => sounds.playCombo(streak + 1), 160);
     } else {
       sounds.playWrong();
     }
-
-    const id = setTimeout(() => {
-      onSelectOption(isCorrect, question.options[index]);
-    }, 2400);
-    setTimeoutId(id);
+    setTid(setTimeout(() => onSelectOption(correct, question.options[idx]), 2200));
   };
 
-  const optionLetters = ["A", "B", "C", "D"];
-  const optionColors = [
-    "from-blue-600/20 hover:border-blue-500",
-    "from-purple-600/20 hover:border-purple-500",
-    "from-pink-600/20 hover:border-pink-500",
-    "from-emerald-600/20 hover:border-emerald-500",
-  ];
-
   return (
-    <div className="w-full max-w-lg mx-auto p-4 space-y-3.5 select-none">
-      {/* Streak Badge Notice */}
+    <div className="w-full max-w-lg mx-auto px-3 py-2 flex flex-col gap-3 select-none">
+      {/* Streak notice */}
       {streak >= 2 && (
-        <div className="flex items-center justify-center gap-1.5 py-1 px-3 bg-amber-500/15 border border-amber-500/40 rounded-full text-amber-300 text-xs font-black w-fit mx-auto animate-pulse shadow-lg">
-          <Flame className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-          <span>{streak}X STREAK ACTIVE!</span>
+        <div
+          className="card-px flex items-center justify-center gap-2 py-1.5 text-[9px] self-center px-4 border-[var(--color-px-amber)]!"
+          aria-live="polite"
+        >
+          🔥 <span className="text-[var(--color-px-amber)]">{streak}X STREAK</span>
         </div>
       )}
 
-      {/* Options Grid */}
-      <div className="grid grid-cols-1 gap-3">
-        {question.options.map((optText, idx) => {
-          const isSelected = selectedIndex === idx;
-          const isCorrectAnswer = idx === question.answer;
+      {/* Options */}
+      <div className="flex flex-col gap-2">
+        {question.options.map((opt, idx) => {
+          const isCorrect = idx === question.answer;
+          const isSelected = selected === idx;
+          const col = OPTION_COLORS[idx % OPTION_COLORS.length];
 
-          // Updated to pixel‑art minimalism: solid background, no gradients or glass‑morphism
-let btnClass = "bg-slate-800 border-slate-700 text-white hover:bg-slate-700 hover:border-slate-600 shadow-md";
+          let bg = col.base;
+          let border: string = col.border;
+          let textColor = "var(--color-px-text)";
+          let opacity = "1";
+          let translateStr = "";
 
-          if (hasAnswered) {
-            if (isCorrectAnswer) {
-              btnClass =
-                "bg-emerald-600/95 border-emerald-400 text-white font-black shadow-lg shadow-emerald-600/40 scale-[1.01]";
-            } else if (isSelected && !isCorrectAnswer) {
-              btnClass =
-                "bg-red-600/95 border-red-400 text-white font-black shadow-lg shadow-red-600/40";
+          if (answered) {
+            if (isCorrect) {
+              bg = "#003320";
+              border = "#00e676";
+            } else if (isSelected) {
+              bg = "#330010";
+              border = "#ff3d57";
             } else {
-              btnClass = "bg-slate-900/30 border-slate-800/30 text-slate-500 opacity-50";
+              opacity = "0.4";
             }
           } else {
-            btnClass += ` ${optionColors[idx % optionColors.length]}`;
+            translateStr = "hover:-translate-y-px";
           }
 
           return (
             <button
               key={idx}
               type="button"
-              onClick={() => handleOptionClick(idx)}
-              disabled={hasAnswered}
-              className={`w-full p-4 rounded-2xl border-2 font-bold text-left text-xs md:text-sm flex items-center justify-between transition-all duration-200 active:scale-98 ${btnClass}`}
+              onClick={() => pick(idx)}
+              disabled={answered}
+              aria-pressed={isSelected}
+              aria-label={`Option ${LETTERS[idx]}: ${opt}`}
+              className={`w-full text-left flex items-center gap-3 px-3 py-3 text-[9px] leading-relaxed
+                transition-transform duration-100 active:translate-y-px shadow-px ${translateStr}`}
+              style={{
+                background: bg,
+                border: `2px solid ${border}`,
+                color: textColor,
+                opacity,
+                boxShadow: "2px 2px 0 #000",
+                fontFamily: "var(--font-pixel)",
+              }}
             >
-              <div className="flex items-center gap-3.5 flex-1 min-w-0">
-                <div className="relative group">
-                  <span className="w-8 h-8 rounded-xl bg-slate-950/80 border border-white/15 flex items-center justify-center font-mono text-xs text-blue-300 font-black shrink-0 shadow-inner">
-                    {optionLetters[idx]}
-                  </span>
-                  {!hasAnswered && (
-                    <span className="absolute -top-6 left-1/2 -translate-x-1/2 bg-slate-800 text-[10px] text-slate-300 px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap hidden md:block border border-slate-700 font-mono">
-                      Key {idx + 1}
-                    </span>
-                  )}
-                </div>
-                <span className="leading-snug break-words flex-1 min-w-0 [overflow-wrap:anywhere]">
-                  {optText}
-                </span>
-              </div>
+              {/* Letter badge */}
+              <span
+                className="shrink-0 w-7 h-7 flex items-center justify-center text-[9px] font-bold border border-current"
+                style={{ borderColor: border }}
+              >
+                {LETTERS[idx]}
+              </span>
 
-              {hasAnswered && isCorrectAnswer && (
-                <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-slate-950 shrink-0 shadow-md">
-                  <Check className="w-4 h-4 stroke-[3]" />
-                </div>
+              <span className="flex-1 break-words [overflow-wrap:anywhere]">{opt}</span>
+
+              {answered && isCorrect && (
+                <Check className="w-4 h-4 shrink-0 text-[var(--color-px-green)]" strokeWidth={3} />
               )}
-
-              {hasAnswered && isSelected && !isCorrectAnswer && (
-                <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center text-white shrink-0 shadow-md">
-                  <X className="w-4 h-4 stroke-[3]" />
-                </div>
+              {answered && isSelected && !isCorrect && (
+                <X className="w-4 h-4 shrink-0 text-[var(--color-px-red)]" strokeWidth={3} />
               )}
             </button>
           );
         })}
       </div>
 
-      {/* Instant Explanation Box */}
-      {hasAnswered && question.explanation && (
-        <div className="bg-slate-900/95 border-2 border-blue-500/40 rounded-2xl p-4 text-xs text-blue-200 space-y-1.5 shadow-2xl animate-fadeIn relative backdrop-blur-md">
-          <div className="font-black flex items-center justify-between gap-1 text-blue-400">
-            <div className="flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-blue-400" />
-              <span className="uppercase tracking-wider text-[11px]">Explanation</span>
-            </div>
-            <div className="text-[10px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded-full border border-slate-800 font-mono">
-              Press Enter ↵
-            </div>
-          </div>
-          <p className="leading-relaxed text-slate-300 text-xs md:text-sm">
-            {question.explanation}
-          </p>
-
-          {/* Auto advance progress bar */}
-          <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden mt-2">
-            <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 animate-[pulse_2s_infinite]" />
-          </div>
+      {/* Explanation */}
+      {answered && question.explanation && (
+        <div
+          className="card-px p-3 text-[8px] leading-loose text-[var(--color-px-dim)] border-[var(--color-px-blue)]!"
+          aria-live="polite"
+        >
+          <span className="text-[var(--color-px-blue)] uppercase tracking-wider text-[8px]">
+            💡 Explanation
+          </span>
+          <p className="mt-1 text-[var(--color-px-text)]">{question.explanation}</p>
+          <div className="text-[7px] text-[var(--color-px-dim)] mt-2">ENTER → next</div>
         </div>
       )}
     </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Volume2, VolumeX, ArrowLeft, Trophy, HelpCircle, Flame } from "lucide-react";
+import { Volume2, VolumeX, ArrowLeft, Trophy, Flame } from "lucide-react";
 
 interface GameUIOverlayProps {
   score: number;
@@ -22,91 +22,89 @@ export const GameUIOverlay: React.FC<GameUIOverlayProps> = ({
   onReset,
   streak = 0,
 }) => {
-  // Animated score counter for juice
   const [displayScore, setDisplayScore] = useState(score);
 
   useEffect(() => {
     if (displayScore === score) return;
-    const diff = score - displayScore;
-    const step = Math.ceil(diff / 5);
-    const timer = setTimeout(() => {
-      setDisplayScore((prev) => Math.min(score, prev + step));
-    }, 40);
-    return () => clearTimeout(timer);
+    const step = Math.ceil((score - displayScore) / 5);
+    const t = setTimeout(() => setDisplayScore(p => Math.min(score, p + step)), 40);
+    return () => clearTimeout(t);
   }, [score, displayScore]);
 
-  const progressPercent = Math.round(
-    ((currentIndex + 1) / Math.max(1, totalQuestions)) * 100
-  );
+  const pct = Math.round(((currentIndex + 1) / Math.max(1, totalQuestions)) * 100);
 
   return (
-    <div className="w-full flex flex-col items-center justify-start space-y-2.5 px-4 pt-3 pb-1 select-none pointer-events-auto">
-      {/* Top Header Bar */}
-      <div className="w-full max-w-xl flex items-center justify-between gap-2">
+    <div className="w-full flex flex-col gap-2 px-3 pt-3 pb-1 select-none">
+      {/* ── Top bar ── */}
+      <div className="flex items-center justify-between gap-2 max-w-xl mx-auto w-full">
+        {/* Back */}
         <button
           type="button"
           onClick={onReset}
-          className="p-2.5 bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 rounded-xl text-slate-300 hover:text-white transition-all active:scale-95 shadow-lg flex items-center gap-1.5 text-xs font-bold"
-          title="Return to Menu"
+          className="btn-px text-[10px] gap-1.5 px-3 py-2"
+          title="Menu"
+          aria-label="Return to menu"
         >
-          <ArrowLeft className="w-4 h-4 text-blue-400" />
-          <span className="hidden sm:inline">Menu</span>
+          <ArrowLeft className="w-3 h-3" strokeWidth={2} />
+          <span className="hidden sm:inline">MENU</span>
         </button>
 
+        {/* Score + Streak */}
         <div className="flex items-center gap-2">
-          {/* Animated Score Badge */}
-          <div className="bg-slate-900/90 border border-slate-700/80 px-3.5 py-1.5 rounded-xl text-xs font-black shadow-lg flex items-center gap-1.5">
-            <Trophy className="w-4 h-4 text-yellow-400" />
-            <span className="text-slate-400">Score:</span>
-            <span className="text-yellow-400 font-mono text-sm tracking-wide">
-              {displayScore}
-            </span>
+          <div className="card-px flex items-center gap-2 px-3 py-1.5 text-[10px]">
+            <Trophy className="w-3.5 h-3.5 text-[var(--color-px-yellow)]" strokeWidth={2} />
+            <span className="text-[var(--color-px-dim)]">PTS</span>
+            <span className="text-[var(--color-px-yellow)] font-bold">{displayScore}</span>
           </div>
 
-          {/* Streak Flame Badge */}
           {streak >= 2 && (
-            <div className="bg-amber-950/80 border border-amber-500/50 px-2.5 py-1.5 rounded-xl text-xs font-black shadow-lg flex items-center gap-1 text-amber-300 animate-pulse">
-              <Flame className="w-4 h-4 text-amber-400 fill-amber-400" />
-              <span className="font-mono">{streak}x</span>
+            <div
+              className="card-px flex items-center gap-1.5 px-2.5 py-1.5 text-[10px] border-[var(--color-px-amber)]!"
+              aria-label={`${streak}x streak`}
+            >
+              <Flame className="w-3.5 h-3.5 text-[var(--color-px-amber)]" strokeWidth={2} />
+              <span className="text-[var(--color-px-amber)]">{streak}x</span>
             </div>
           )}
 
-          {/* Question Counter */}
-          <div className="bg-slate-900/90 border border-slate-700/80 px-3 py-1.5 rounded-xl text-xs font-black shadow-lg flex items-center gap-1.5">
-            <HelpCircle className="w-4 h-4 text-indigo-400" />
-            <span className="text-indigo-300 font-mono">
+          <div className="card-px flex items-center gap-1.5 px-3 py-1.5 text-[10px]">
+            <span className="text-[var(--color-px-blue)]">
               {Math.min(currentIndex + 1, totalQuestions)}/{totalQuestions}
             </span>
           </div>
         </div>
 
-        {/* Sound Toggle */}
+        {/* Sound */}
         <button
           type="button"
           onClick={onToggleSound}
-          className="p-2.5 bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 rounded-xl text-slate-300 hover:text-white transition-all active:scale-95 shadow-lg"
-          title={soundEnabled ? "Mute Sound" : "Enable Sound"}
+          className="btn-px px-3 py-2"
+          title={soundEnabled ? "Mute" : "Unmute"}
+          aria-label={soundEnabled ? "Mute sound" : "Enable sound"}
         >
-          {soundEnabled ? (
-            <Volume2 className="w-4 h-4 text-emerald-400" />
-          ) : (
-            <VolumeX className="w-4 h-4 text-slate-500" />
-          )}
+          {soundEnabled
+            ? <Volume2 className="w-3.5 h-3.5 text-[var(--color-px-green)]" strokeWidth={2} />
+            : <VolumeX className="w-3.5 h-3.5 text-[var(--color-px-dim)]" strokeWidth={2} />
+          }
         </button>
       </div>
 
-      {/* Progress Bar with Glowing Tip */}
-      <div className="w-full max-w-xl h-1.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+      {/* ── Progress bar (solid, pixel style) ── */}
+      <div className="w-full max-w-xl mx-auto h-2 bg-[var(--color-px-surface)] border border-[var(--color-px-border)]">
         <div
-          className="h-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 transition-all duration-300 ease-out shadow-[0_0_10px_rgba(99,102,241,0.5)]"
-          style={{ width: `${progressPercent}%` }}
+          className="h-full bg-[var(--color-px-blue)] transition-all duration-300"
+          style={{ width: `${pct}%` }}
+          role="progressbar"
+          aria-valuenow={pct}
+          aria-valuemin={0}
+          aria-valuemax={100}
         />
       </div>
 
-      {/* Active Question Box */}
+      {/* ── Question box ── */}
       {questionText && (
-        <div className="w-full max-w-lg bg-slate-900/95 border-2 border-blue-500/40 rounded-2xl p-3.5 md:p-4 text-center shadow-2xl backdrop-blur-md transition-all">
-          <p className="text-xs md:text-sm font-extrabold text-white leading-relaxed">
+        <div className="card-px w-full max-w-lg mx-auto px-4 py-3 text-center border-[var(--color-px-blue)]!">
+          <p className="text-[9px] sm:text-[10px] leading-loose text-[var(--color-px-text)]">
             {questionText}
           </p>
         </div>

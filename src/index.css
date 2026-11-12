@@ -1,7 +1,79 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+@import "tailwindcss";
 
-html, body {
-  font-family: 'Press Start 2P', monospace;
+/* ── Pixel‑Art Design Tokens ─────────────────────── */
+@theme {
+  --font-pixel: 'Press Start 2P', monospace;
+
+  /* Palette: 10 crisp hues, no gradients */
+  --color-px-bg:      #0a0a0f;
+  --color-px-surface: #111118;
+  --color-px-border:  #2a2a3a;
+  --color-px-muted:   #3a3a4a;
+  --color-px-text:    #e8e8f0;
+  --color-px-dim:     #7a7a9a;
+  --color-px-yellow:  #ffb800;
+  --color-px-green:   #00e676;
+  --color-px-red:     #ff3d57;
+  --color-px-blue:    #3d9bff;
+  --color-px-purple:  #9b6dff;
+  --color-px-amber:   #ff9800;
+
+  /* 2‑px pixel shadow */
+  --shadow-pixel: 2px 2px 0px #000;
+  --shadow-pixel-sm: 1px 1px 0px #000;
 }
 
-@import "tailwindcss";
+/* ── Base ─────────────────────────────────────────── */
+html, body, * {
+  font-family: var(--font-pixel);
+  -webkit-font-smoothing: none;
+  image-rendering: pixelated;
+}
+
+body {
+  background-color: var(--color-px-bg);
+  color: var(--color-px-text);
+}
+
+/* ── Utility: pixel border ───────────────────────── */
+.border-px { border: 2px solid var(--color-px-border); }
+.border-px-yellow { border: 2px solid var(--color-px-yellow); }
+.border-px-green  { border: 2px solid var(--color-px-green); }
+.border-px-red    { border: 2px solid var(--color-px-red); }
+.border-px-blue   { border: 2px solid var(--color-px-blue); }
+
+/* ── Pixel box shadow ────────────────────────────── */
+.shadow-px { box-shadow: var(--shadow-pixel); }
+
+/* ── Pixel button base ───────────────────────────── */
+.btn-px {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--color-px-border);
+  background: var(--color-px-surface);
+  color: var(--color-px-text);
+  box-shadow: var(--shadow-pixel);
+  cursor: pointer;
+  transition: transform 80ms, box-shadow 80ms;
+  font-family: var(--font-pixel);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.btn-px:active { transform: translate(2px,2px); box-shadow: none; }
+
+/* ── Pixel card ──────────────────────────────────── */
+.card-px {
+  background: var(--color-px-surface);
+  border: 2px solid var(--color-px-border);
+  box-shadow: var(--shadow-pixel);
+}
+
+/* ── Scrollbar ───────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--color-px-bg); }
+::-webkit-scrollbar-thumb { background: var(--color-px-muted); }
