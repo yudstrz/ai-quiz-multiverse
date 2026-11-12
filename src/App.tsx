@@ -122,11 +122,10 @@ export default function App() {
           if (errData.isMissingKey) {
             showToast(
               lang === "Indonesian"
-                ? "API key Gemini belum disetel di server. Memuat contoh kuis trivia."
-                : "Gemini API key missing on server. Using fallback trivia preset.",
-              "info"
+                ? "GEMINI_API_KEY belum disetel di server/Vercel. Silakan atur di Environment Variables."
+                : "GEMINI_API_KEY is missing on server/Vercel. Please set it in Environment Variables.",
+              "error"
             );
-            handleUsePreset("general", lang);
             return;
           }
           errMsg = errData.error || errMsg;
@@ -161,8 +160,6 @@ export default function App() {
       console.error("AI Generation error:", err);
       const msg = err instanceof Error ? err.message : "AI Generation failed.";
       showToast(msg, "error");
-      // Fallback using user's selected language!
-      handleUsePreset("general", lang);
     } finally {
       setIsLoading(false);
     }
