@@ -17,9 +17,9 @@ export default defineConfig(() => {
           maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         },
         manifest: {
-          name: 'AI Quiz Multiverse',
-          short_name: 'AI Quiz',
-          description: 'AI Quiz Multiverse - Turn your study notes into playable arcade mini-games.',
+          name: 'Max Quizverse',
+          short_name: 'MaxQuiz',
+          description: 'Max Quizverse - Turn your study notes into playable arcade mini-games.',
           theme_color: '#020617',
           icons: [
             {

@@ -1,6 +1,6 @@
 {
-  "name": "AI Quiz Multiverse",
-  "short_name": "AI Quiz",
+  "name": "Max Quizverse",
+  "short_name": "MaxQuiz",
   "description": "Turn your study notes into playable arcade mini-games.",
   "start_url": "/",
   "display": "standalone",

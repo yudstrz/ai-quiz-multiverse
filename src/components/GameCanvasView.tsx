@@ -162,9 +162,9 @@ export const GameCanvasView: React.FC<GameCanvasViewProps> = ({
     let jumpBuffer = 0;
     let coyoteTimer = 0;
 
-    // Options mapping
+    // Options mapping - crisp pixel palette tokens
     const optionLetters = ["A", "B", "C", "D"];
-    const optionColors = ["#ef4444", "#3b82f6", "#eab308", "#10b981"];
+    const optionColors = ["#ff3d57", "#3d9bff", "#ffb800", "#00e676"];
     let fallingOptions = question.options.map((optText, idx) => ({
       text: optText,
       label: optionLetters[idx] || `${idx + 1}`,
@@ -299,7 +299,7 @@ export const GameCanvasView: React.FC<GameCanvasViewProps> = ({
         .filter((t) => t.length > 0);
 
       const getWrappedLines = (fontSize: number) => {
-        context.font = `bold ${fontSize}px 'Inter', sans-serif`;
+      context.font = `bold ${fontSize}px 'Press Start 2P', monospace`;
         const lines: string[] = [];
         let currentLine = "";
 
@@ -339,7 +339,7 @@ export const GameCanvasView: React.FC<GameCanvasViewProps> = ({
       for (let size = preferredFontSize; size >= 8; size--) {
         bestFontSize = size;
         finalLines = getWrappedLines(size);
-        context.font = `bold ${size}px 'Inter', sans-serif`;
+        context.font = `bold ${size}px 'Press Start 2P', monospace`;
         const maxLineWidth = Math.max(
           0,
           ...finalLines.map((l) => context.measureText(l).width)
@@ -348,12 +348,11 @@ export const GameCanvasView: React.FC<GameCanvasViewProps> = ({
         if (maxLineWidth <= maxAvailableWidth && totalHeight <= height - 8) break;
       }
 
-      context.font = `bold ${bestFontSize}px 'Inter', sans-serif`;
+      context.font = `bold ${bestFontSize}px 'Press Start 2P', monospace`;
       context.textAlign = "center";
       context.textBaseline = "middle";
-      context.fillStyle = "#ffffff";
 
-      const lineHeight = Math.max(12, bestFontSize * 1.3);
+      const lineHeight = Math.max(10, bestFontSize * 1.35);
       const totalTextHeight = finalLines.length * lineHeight;
       let startY = y + height / 2 - totalTextHeight / 2 + lineHeight / 2;
 
@@ -368,10 +367,14 @@ export const GameCanvasView: React.FC<GameCanvasViewProps> = ({
           }
           displayLine += "...";
         }
-        context.shadowColor = "#000000";
-        context.shadowBlur = 6;
+        // Crisp 1px pixel border around text (NES style, no blur)
+        context.fillStyle = "#000000";
+        context.fillText(displayLine, x + width / 2 + 1, startY + 1);
+        context.fillText(displayLine, x + width / 2 - 1, startY - 1);
+        context.fillText(displayLine, x + width / 2 + 1, startY - 1);
+        context.fillText(displayLine, x + width / 2 - 1, startY + 1);
+        context.fillStyle = "#ffffff";
         context.fillText(displayLine, x + width / 2, startY);
-        context.shadowBlur = 0;
         startY += lineHeight;
       });
       context.restore();
@@ -392,9 +395,7 @@ export const GameCanvasView: React.FC<GameCanvasViewProps> = ({
 
       if (avatarConfig.shape === "emoji") {
         if (!forceUpright) ctx.rotate(-angle);
-        // Animated neon ground shadow under emoji
-        ctx.shadowColor = "rgba(59, 130, 246, 0.7)";
-        ctx.shadowBlur = 18;
+        ctx.shadowBlur = 0;
         ctx.font = `${size * 1.85}px sans-serif`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
@@ -403,7 +404,7 @@ export const GameCanvasView: React.FC<GameCanvasViewProps> = ({
         return;
       }
 
-      // ── Pixel-art player: NO glow, crisp shapes ──
+      // ── Pixel-art player: NO glow, crisp stepped shapes ──
       ctx.shadowBlur = 0;
       ctx.fillStyle = avatarConfig.color;
       ctx.beginPath();
@@ -419,7 +420,17 @@ export const GameCanvasView: React.FC<GameCanvasViewProps> = ({
       } else if (avatarConfig.shape === "square") {
         ctx.rect(-size, -size, size * 2, size * 2);
       } else if (avatarConfig.shape === "circle") {
-        ctx.arc(0, 0, size, 0, Math.PI * 2);
+        // Pixelated 8-bit circle: stepped octagonal sprite
+        const s = size;
+        const c = Math.floor(s * 0.4);
+        ctx.moveTo(-s + c, -s);
+        ctx.lineTo(s - c, -s);
+        ctx.lineTo(s, -s + c);
+        ctx.lineTo(s, s - c);
+        ctx.lineTo(s - c, s);
+        ctx.lineTo(-s + c, s);
+        ctx.lineTo(-s, s - c);
+        ctx.lineTo(-s, -s + c);
       }
 
       ctx.closePath();
@@ -427,7 +438,7 @@ export const GameCanvasView: React.FC<GameCanvasViewProps> = ({
 
       // 2-px dark pixel border
       ctx.lineWidth = 2;
-      ctx.strokeStyle = "rgba(0,0,0,0.9)";
+      ctx.strokeStyle = "rgba(0,0,0,0.95)";
       ctx.stroke();
       // 1-px white highlight edge
       ctx.lineWidth = 1;
@@ -436,13 +447,12 @@ export const GameCanvasView: React.FC<GameCanvasViewProps> = ({
 
       if (avatarConfig.face) {
         if (!forceUpright) ctx.rotate(-angle);
+        ctx.shadowBlur = 0;
         ctx.fillStyle = "#ffffff";
-        ctx.font = "bold 13px sans-serif";
+        ctx.font = "bold 11px 'Press Start 2P', monospace";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.shadowColor = "#000000";
-        ctx.shadowBlur = 5;
-        ctx.fillText(avatarConfig.face, 0, 2);
+        ctx.fillText(avatarConfig.face, 0, 1);
       }
       ctx.restore();
     };
@@ -811,34 +821,29 @@ export const GameCanvasView: React.FC<GameCanvasViewProps> = ({
         ctx.translate(-canvas.width / 2, -canvas.height / 2);
       }
 
-      // Cyberpunk Parallax Background
-      const bgGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      bgGrad.addColorStop(0, "#020617");
-      bgGrad.addColorStop(0.5, "#0b1120");
-      bgGrad.addColorStop(1, "#020617");
-      ctx.fillStyle = bgGrad;
+      // ── Pixel-Art Retro Background (Solid, NO gradients) ──
+      ctx.fillStyle = "#0a0a0f";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       if (gameMode === "runner" || gameMode === "shooter") {
-        // Glowing Neon Highway Lines
-        ctx.setLineDash([14, 14]);
-        ctx.shadowColor = "#3b82f6";
-        ctx.shadowBlur = 8;
-        ctx.strokeStyle = "rgba(59, 130, 246, 0.35)";
+        // Crisp Pixel Highway Lane Dividers
+        ctx.setLineDash([8, 8]);
+        ctx.strokeStyle = "#2a2a3a";
         ctx.lineWidth = 2;
+        ctx.shadowBlur = 0;
         for (let i = 1; i < 4; i++) {
           ctx.beginPath();
-          ctx.moveTo(i * laneW, -40 + bgOffset);
+          ctx.moveTo(i * laneW, -20 + bgOffset);
           ctx.lineTo(i * laneW, canvas.height);
           ctx.stroke();
         }
-        ctx.shadowBlur = 0;
       } else {
-        // Scrolling Parallax Horizontal Grid
-        ctx.setLineDash([25, 25]);
-        ctx.strokeStyle = "rgba(148, 163, 184, 0.12)";
-        ctx.lineWidth = 1.5;
-        for (let i = 0; i < canvas.height; i += 48) {
+        // Crisp Pixel Horizontal Parallax Grid
+        ctx.setLineDash([16, 16]);
+        ctx.strokeStyle = "#1a1a28";
+        ctx.lineWidth = 1;
+        ctx.shadowBlur = 0;
+        for (let i = 0; i < canvas.height; i += 40) {
           ctx.beginPath();
           ctx.moveTo(-100 - bgOffset * 2, i);
           ctx.lineTo(canvas.width, i);
@@ -847,33 +852,19 @@ export const GameCanvasView: React.FC<GameCanvasViewProps> = ({
 
         if (gameMode === "dash") {
           ctx.setLineDash([]);
-          // Neon Ground Surface
-          const groundGrad = ctx.createLinearGradient(0, groundY, 0, canvas.height);
-          groundGrad.addColorStop(0, "#0f172a");
-          groundGrad.addColorStop(1, "#020617");
-          ctx.fillStyle = groundGrad;
+          // Solid Pixel Ground
+          ctx.fillStyle = "#111118";
           ctx.fillRect(0, groundY, canvas.width, 70);
 
-          // Neon Ground Boundary Line
-          ctx.shadowColor = "#3b82f6";
-          ctx.shadowBlur = 12;
-          ctx.strokeStyle = "#38bdf8";
-          ctx.lineWidth = 3.5;
-          ctx.beginPath();
-          ctx.moveTo(0, groundY);
-          ctx.lineTo(canvas.width, groundY);
-          ctx.stroke();
-          ctx.shadowBlur = 0;
+          // Top turf line (crisp 3px green surface)
+          ctx.fillStyle = "#00e676";
+          ctx.fillRect(0, groundY, canvas.width, 3);
 
-          // Speed lines across ground
-          ctx.fillStyle = "rgba(56, 189, 248, 0.35)";
-          for (let i = 0; i < 6; i++) {
-            ctx.fillRect(
-              ((bgOffset * (i + 2) * 5 + i * 140) % (canvas.width + 100)) - 100,
-              groundY + 14 + i * 9,
-              45 + i * 18,
-              2
-            );
+          // Pixel gravel/stone texture
+          ctx.fillStyle = "#2a2a3a";
+          for (let x = 0; x < canvas.width; x += 20) {
+            ctx.fillRect(((x + bgOffset * 2) % (canvas.width + 20)) - 10, groundY + 14, 6, 2);
+            ctx.fillRect(((x + bgOffset * 2 + 10) % (canvas.width + 20)) - 10, groundY + 28, 8, 2);
           }
         }
       }
@@ -924,82 +915,74 @@ export const GameCanvasView: React.FC<GameCanvasViewProps> = ({
 
         drawPlayer(playerX, playerY, 24, playerAngle);
       } else if (gameMode === "shooter") {
-        // Hyperspace Starfield with Parallax
+        // Crisp Pixel Starfield
         ctx.fillStyle = "#ffffff";
-        for (let i = 0; i < 30; i++) {
+        for (let i = 0; i < 28; i++) {
           let speed = (i % 3) + 1;
           let sy = (bgOffset * speed * 3 + i * 75) % canvas.height;
           let sx = (i * 91) % canvas.width;
           ctx.globalAlpha = speed / 3.5;
-          ctx.beginPath();
-          ctx.arc(sx, sy, speed, 0, Math.PI * 2);
-          ctx.fill();
+          ctx.fillRect(sx, sy, 2, 2);
         }
         ctx.globalAlpha = 1.0;
 
         shooterObstacles.forEach((obs) => {
           if (obs.y > canvas.height || obs.y + obs.h < -60 || obs.hit) return;
 
-          // Glowing circular alien target
-          ctx.shadowBlur = 16;
-          ctx.shadowColor = obs.color;
-          ctx.fillStyle = obs.color;
-          ctx.beginPath();
-          ctx.arc(obs.x, obs.y, obs.w / 2, 0, Math.PI * 2);
-          ctx.fill();
-
+          // Crisp 8-Bit Pixel Invader Target Box (NO round arcs, NO blur)
+          const hw = obs.w / 2;
+          const hh = obs.h / 2;
           ctx.shadowBlur = 0;
-          ctx.strokeStyle = "rgba(255,255,255,0.7)";
-          ctx.lineWidth = 2.5;
-          ctx.beginPath();
-          ctx.arc(obs.x, obs.y, obs.w / 2 - 4, 0, Math.PI * 2);
-          ctx.stroke();
+          ctx.fillStyle = obs.color;
+          ctx.fillRect(obs.x - hw, obs.y - hh, obs.w, obs.h);
 
-          // Target Letter Badge
-          ctx.fillStyle = "rgba(0,0,0,0.5)";
-          ctx.beginPath();
-          ctx.arc(obs.x, obs.y - 12, 10, 0, Math.PI * 2);
-          ctx.fill();
+          // 2px black border
+          ctx.strokeStyle = "#000000";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(obs.x - hw, obs.y - hh, obs.w, obs.h);
+
+          // Top highlight edge
+          ctx.fillStyle = "rgba(255,255,255,0.3)";
+          ctx.fillRect(obs.x - hw + 2, obs.y - hh + 2, obs.w - 4, 3);
+
+          // Pixel Letter Badge (square tile)
+          ctx.fillStyle = "rgba(0,0,0,0.85)";
+          ctx.fillRect(obs.x - 10, obs.y - hh + 5, 20, 16);
+          ctx.strokeStyle = "#ffffff";
+          ctx.lineWidth = 1;
+          ctx.strokeRect(obs.x - 10, obs.y - hh + 5, 20, 16);
           ctx.fillStyle = "#ffffff";
-          ctx.font = "bold 11px monospace";
+          ctx.font = "bold 9px 'Press Start 2P', monospace";
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
-          ctx.fillText(obs.label, obs.x, obs.y - 12);
+          ctx.fillText(obs.label, obs.x, obs.y - hh + 13);
 
           drawCenteredText(
             ctx,
             obs.text,
             obs.x - obs.w / 2 + 4,
-            obs.y - 4,
+            obs.y - 2,
             obs.w - 8,
             obs.h / 2,
-            12
+            9
           );
         });
 
-        // Glowing Laser Beam
+        // Crisp 2-Tone Pixel Laser (NO glow, NO roundRect)
         if (laser.active) {
-          const glowGrad = ctx.createLinearGradient(
-            laser.x,
-            laser.y,
-            laser.x,
-            laser.y + laser.h
-          );
-          glowGrad.addColorStop(0, "#ffffff");
-          glowGrad.addColorStop(1, "#3b82f6");
-          ctx.fillStyle = glowGrad;
-          ctx.shadowBlur = 22;
-          ctx.shadowColor = "#60a5fa";
-          ctx.beginPath();
-          ctx.roundRect(laser.x - laser.w / 2, laser.y, laser.w, laser.h, 4);
-          ctx.fill();
           ctx.shadowBlur = 0;
+          // Outer red laser edge
+          ctx.fillStyle = "#ff3d57";
+          ctx.fillRect(laser.x - 3, laser.y, 6, laser.h);
+          // Core bright laser beam
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(laser.x - 1, laser.y + 2, 2, laser.h - 4);
         }
 
         drawPlayer(playerX, playerY, 22, 0, true);
       }
 
-      // Render Shockwaves
+      // Render Pixel Shockwaves (expanding square frames)
       for (let i = shockwaves.length - 1; i >= 0; i--) {
         const sw = shockwaves[i];
         sw.radius += (sw.maxRadius - sw.radius) * 0.18;
@@ -1013,16 +996,14 @@ export const GameCanvasView: React.FC<GameCanvasViewProps> = ({
         ctx.save();
         ctx.globalAlpha = sw.life;
         ctx.strokeStyle = sw.color;
-        ctx.lineWidth = 3.5;
-        ctx.shadowColor = sw.color;
-        ctx.shadowBlur = 12;
-        ctx.beginPath();
-        ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
-        ctx.stroke();
+        ctx.lineWidth = 2;
+        ctx.shadowBlur = 0;
+        const halfR = Math.floor(sw.radius);
+        ctx.strokeRect(sw.x - halfR, sw.y - halfR, halfR * 2, halfR * 2);
         ctx.restore();
       }
 
-      // Render Particles
+      // Render Pixel Debris Particles (square tiles, NO blur)
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         p.x += p.vx;
@@ -1038,16 +1019,13 @@ export const GameCanvasView: React.FC<GameCanvasViewProps> = ({
 
         ctx.globalAlpha = p.life / p.maxLife;
         ctx.fillStyle = p.color;
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = p.color;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
         ctx.shadowBlur = 0;
+        const pSize = Math.max(2, Math.floor(p.size));
+        ctx.fillRect(Math.floor(p.x), Math.floor(p.y), pSize, pSize);
         ctx.globalAlpha = 1.0;
       }
 
-      // Render Floating Score / Feedback Texts
+      // Render Floating Score / Feedback Texts in Pixel Font
       for (let i = floatingTexts.length - 1; i >= 0; i--) {
         const ft = floatingTexts[i];
         ft.y -= 1.8;
@@ -1064,19 +1042,19 @@ export const GameCanvasView: React.FC<GameCanvasViewProps> = ({
         ctx.translate(ft.x, ft.y);
         ctx.scale(ft.scale, ft.scale);
 
-        ctx.font = `black ${ft.size}px 'Inter', sans-serif`;
+        const pixelSize = Math.max(8, Math.floor(ft.size * 0.65));
+        ctx.font = `bold ${pixelSize}px 'Press Start 2P', monospace`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-
-        ctx.shadowColor = ft.color;
-        ctx.shadowBlur = 14;
-        ctx.fillStyle = ft.color;
-        ctx.fillText(ft.text, 0, 0);
-
         ctx.shadowBlur = 0;
-        ctx.strokeStyle = "#000000";
-        ctx.lineWidth = 2;
-        ctx.strokeText(ft.text, 0, 0);
+
+        // 1px cardinal black outline
+        ctx.fillStyle = "#000000";
+        ctx.fillText(ft.text, 1, 1);
+        ctx.fillText(ft.text, -1, -1);
+        ctx.fillText(ft.text, 1, -1);
+        ctx.fillText(ft.text, -1, 1);
+        ctx.fillStyle = ft.color;
         ctx.fillText(ft.text, 0, 0);
 
         ctx.restore();
@@ -1113,31 +1091,33 @@ export const GameCanvasView: React.FC<GameCanvasViewProps> = ({
     window.dispatchEvent(new KeyboardEvent("keydown", { key }));
   };
 
+  // Concise arcade instructions that fit on all screens
   const modeHintMap: Record<string, string> = {
-    runner: "🏎️ Slide lane or use ◀ ▶ to steer into correct block",
-    flappy: "🕊️ Tap screen or Space to flap into correct answer",
-    dash: "🏃 Tap screen or Space to jump over wrong blocks",
-    shooter: "🚀 Tap lane or use ◀ ▶ + Space to shoot target",
+    runner: "◀ ▶ STEER INTO ANSWER",
+    flappy: "SPACE / TAP TO FLAP",
+    dash: "SPACE / TAP TO JUMP OVER WRONG",
+    shooter: "◀ ▶ MOVE · SPACE / TAP TO FIRE",
   };
   const modeHint = modeHintMap[gameMode] ?? "";
 
   return (
     <div className="w-full flex flex-col items-center justify-center gap-2">
+      {/* Game Mode Arcade Instructions Bar - placed outside canvas, guaranteed no clipping */}
+      <div className="w-full max-w-md px-3 py-1.5 card-px text-center text-[8px] text-[var(--color-px-yellow)] border-[var(--color-px-border)] flex items-center justify-center gap-1.5">
+        <span>🎮 {modeHint}</span>
+      </div>
+
       <div
         ref={containerRef}
-        className="relative w-full max-w-md aspect-[2/3] max-h-[64vh] mx-auto border-2 border-slate-700/60 rounded-2xl overflow-hidden bg-slate-950 shadow-[0_0_40px_rgba(59,130,246,0.2)] select-none touch-none"
+        className="relative w-full max-w-md aspect-[2/3] max-h-[64vh] mx-auto border-4 border-[var(--color-px-border)] shadow-px bg-[var(--color-px-bg)] overflow-hidden select-none touch-none"
       >
         <canvas
           ref={canvasRef}
           width={400}
           height={600}
-          className="w-full h-full block bg-slate-950"
+          className="w-full h-full block bg-[var(--color-px-bg)]"
+          style={{ imageRendering: "pixelated" }}
         />
-
-        {/* Subtle Game Guide Pill */}
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 px-3 py-1 bg-slate-950/85 backdrop-blur-md border border-white/10 rounded-full text-[10px] md:text-xs text-slate-300 font-semibold pointer-events-none shadow-lg whitespace-nowrap flex items-center gap-1.5">
-          <span>{modeHint}</span>
-        </div>
       </div>
 
       {/* On-screen Mobile Arcade Touch Controls */}
@@ -1149,9 +1129,10 @@ export const GameCanvasView: React.FC<GameCanvasViewProps> = ({
               e.preventDefault();
               sendKey("ArrowLeft");
             }}
-            className="flex-1 py-3 bg-slate-800/90 hover:bg-slate-700 active:bg-blue-600 border border-slate-700 rounded-xl text-white font-black text-sm shadow-md transition-all active:scale-95 flex items-center justify-center gap-1"
+            className="btn-px flex-1 py-3 text-[9px]"
+            aria-label="Move left"
           >
-            ◀ <span>Left</span>
+            ◀ <span>LEFT</span>
           </button>
         )}
 
@@ -1162,9 +1143,10 @@ export const GameCanvasView: React.FC<GameCanvasViewProps> = ({
               e.preventDefault();
               sendKey(" ");
             }}
-            className="flex-1 py-3 bg-red-600/90 hover:bg-red-500 active:bg-red-400 border border-red-500 rounded-xl text-white font-black text-sm shadow-lg shadow-red-600/30 transition-all active:scale-95 flex items-center justify-center gap-1"
+            className="btn-px flex-1 py-3 text-[9px] border-[var(--color-px-red)]! text-[var(--color-px-red)]"
+            aria-label="Fire laser"
           >
-            🔥 <span>Fire</span>
+            🔥 <span>FIRE</span>
           </button>
         )}
 
@@ -1175,9 +1157,10 @@ export const GameCanvasView: React.FC<GameCanvasViewProps> = ({
               e.preventDefault();
               sendKey("ArrowRight");
             }}
-            className="flex-1 py-3 bg-slate-800/90 hover:bg-slate-700 active:bg-blue-600 border border-slate-700 rounded-xl text-white font-black text-sm shadow-md transition-all active:scale-95 flex items-center justify-center gap-1"
+            className="btn-px flex-1 py-3 text-[9px]"
+            aria-label="Move right"
           >
-            <span>Right</span> ▶
+            <span>RIGHT</span> ▶
           </button>
         )}
 
@@ -1188,7 +1171,8 @@ export const GameCanvasView: React.FC<GameCanvasViewProps> = ({
               e.preventDefault();
               sendKey(" ");
             }}
-            className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 active:from-blue-500 active:to-indigo-500 border border-blue-400/40 rounded-xl text-white font-black text-sm shadow-lg shadow-blue-600/25 transition-all active:scale-98 flex items-center justify-center gap-2"
+            className="btn-px w-full py-3.5 text-[9px] border-[var(--color-px-yellow)]! text-[var(--color-px-yellow)]"
+            aria-label={gameMode === "flappy" ? "Flap or jump" : "Jump over obstacle"}
           >
             <span>
               {gameMode === "flappy" ? "🕊️ FLAP / JUMP" : "🏃 JUMP OVER OBSTACLE"}

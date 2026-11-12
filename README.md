@@ -1,6 +1,6 @@
-# AI Quiz Multiverse
+# Max Quizverse
 
-Turn your study notes & documents into playable, action-packed arcade mini-games — powered by Google Gemini AI.
+Turn your study notes & documents into playable, action-packed arcade mini-games - powered by Google Gemini AI.
 
 ## Pixel‑Art Style Guide
 

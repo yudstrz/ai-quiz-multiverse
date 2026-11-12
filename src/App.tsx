@@ -112,9 +112,10 @@ export default function App() {
 
       showToast("AI Quiz created successfully!", "success");
       launchQuizGame(data.questions);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("AI Generation error:", err);
-      showToast(err.message || "AI Generation failed. Loading demo preset.", "error");
+      const msg = err instanceof Error ? err.message : "AI Generation failed. Loading demo preset.";
+      showToast(msg, "error");
       // Fallback
       handleUsePreset("general");
     } finally {
@@ -242,6 +243,7 @@ export default function App() {
             soundEnabled={gameState.soundEnabled}
             onToggleSound={toggleSound}
             onReset={handleResetToSetup}
+            streak={gameState.streak}
           />
 
           <div className="w-full flex-1 flex items-center justify-center py-2">
@@ -249,6 +251,7 @@ export default function App() {
               <NormalQuizView
                 question={currentQuestion}
                 onSelectOption={handleAnswerResult}
+                streak={gameState.streak}
               />
             ) : (
               <GameCanvasView
@@ -257,6 +260,7 @@ export default function App() {
                 avatarConfig={avatarConfig}
                 onAnswerResult={handleAnswerResult}
                 soundEnabled={gameState.soundEnabled}
+                streak={gameState.streak}
               />
             )}
           </div>

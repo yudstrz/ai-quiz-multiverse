@@ -14,7 +14,7 @@ interface ResultScreenProps {
 }
 
 const GRADES = [
-  { min: 100, label: "MULTIVERSE MASTER", color: "var(--color-px-yellow)", border: "#ffb800" },
+  { min: 100, label: "QUIZVERSE MASTER", color: "var(--color-px-yellow)", border: "#ffb800" },
   { min: 80,  label: "HIGH ACHIEVER",     color: "var(--color-px-green)",  border: "#00e676" },
   { min: 60,  label: "GOOD EFFORT",       color: "var(--color-px-blue)",   border: "#3d9bff" },
   { min: 0,   label: "NOVICE SCHOLAR",    color: "var(--color-px-dim)",    border: "#3a3a4a" },
@@ -35,8 +35,8 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
 
   const handleDownload = () => {
     const lines = [
-      "AI QUIZ MULTIVERSE SUMMARY",
-      "==========================",
+      "MAX QUIZVERSE SUMMARY",
+      "=====================",
       `Score  : ${score} PTS`,
       `Result : ${correctCount}/${totalQuestions} (${pct}%)`,
       `Rank   : ${grade.label}`,
@@ -51,7 +51,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
         item.explanation ? `  Explanation   : ${item.explanation}` : "",
         "",
       ]),
-      "Keep learning! — AI Quiz Multiverse",
+      "Keep learning! - Max Quizverse",
     ];
 
     const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
@@ -81,7 +81,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = ({
             {grade.label}
           </div>
           <div className="text-[9px] mt-2 text-[var(--color-px-text)]">
-            {correctCount} / {totalQuestions} correct — {pct}%
+            {correctCount} / {totalQuestions} correct ({pct}%)
           </div>
         </div>
       </div>

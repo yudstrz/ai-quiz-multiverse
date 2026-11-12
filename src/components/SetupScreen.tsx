@@ -28,7 +28,7 @@ const PX_SELECT =
   "cursor-pointer appearance-none";
 
 const MODES: { value: GameMode; label: string; hint: string }[] = [
-  { value: "normal",  label: "📋 NORMAL QUIZ",    hint: "Classic options — tap to pick" },
+  { value: "normal",  label: "📋 NORMAL QUIZ",    hint: "Classic options: tap to pick" },
   { value: "runner",  label: "🏎️  DROP RUNNER",    hint: "Catch falling answer in 4 lanes" },
   { value: "flappy",  label: "🕊️  FLAPPY QUIZ",    hint: "Fly up/down into answer blocks" },
   { value: "dash",    label: "🏃 DASH JUMP",       hint: "Jump over/into answer obstacles" },
@@ -96,7 +96,7 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
           <PWAInstallButton showToast={showToast} />
         </div>
         <h1 className="text-sm sm:text-base uppercase tracking-widest text-[var(--color-px-yellow)] mt-1">
-          AI Quiz Multiverse
+          Max Quizverse
         </h1>
         <p className="text-[8px] text-[var(--color-px-dim)] max-w-xs leading-loose">
           Turn study notes into playable arcade mini-games
@@ -325,11 +325,8 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
             Lang
           </label>
           <select value={language} onChange={e => setLanguage(e.target.value as Language)} className={PX_SELECT} aria-label="Language">
-            <option value="English">EN</option>
-            <option value="Indonesian">ID</option>
-            <option value="Spanish">ES</option>
-            <option value="French">FR</option>
-            <option value="Japanese">JP</option>
+            <option value="English">English</option>
+            <option value="Indonesian">Indonesia</option>
           </select>
         </div>
       </section>
@@ -366,7 +363,7 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
 
       {/* Mode hint at bottom of setup */}
       <p className="text-center text-[7px] text-[var(--color-px-dim)] pb-2">
-        MODE: {selectedMode.label} — {selectedMode.hint}
+        MODE: {selectedMode.label} : {selectedMode.hint}
       </p>
     </div>
   );
