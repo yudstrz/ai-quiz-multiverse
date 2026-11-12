@@ -20,7 +20,7 @@ export default defineConfig(() => {
           name: 'Max Quizverse',
           short_name: 'MaxQuiz',
           description: 'Max Quizverse - Turn your study notes into playable arcade mini-games.',
-          theme_color: '#020617',
+          theme_color: '#0a0a0f',
           icons: [
             {
               src: '/icon.svg',

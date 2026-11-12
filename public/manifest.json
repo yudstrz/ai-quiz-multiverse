@@ -4,8 +4,8 @@
   "description": "Turn your study notes into playable arcade mini-games.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#020617",
-  "theme_color": "#020617",
+  "background_color": "#0a0a0f",
+  "theme_color": "#0a0a0f",
   "icons": [
     {
       "src": "/icon.svg",
